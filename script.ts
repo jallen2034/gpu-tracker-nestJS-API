@@ -1,6 +1,27 @@
 import { Browser, chromium, ElementHandle, Page } from 'playwright';
 
-interface Result { sku: string, province: string, location: string, quantity: number }
+// Base result returned from scraping.
+interface Result {
+  sku: string;
+  province: string;
+  location: string;
+  quantity: number;
+}
+
+// Maps SKUs to their Result objects at a specific location.
+interface SkuMap {
+  [skuName: string]: Result;
+}
+
+// Maps locations to their available SKUs.
+interface LocationMap {
+  [locationName: string]: SkuMap;
+}
+
+// The complete response structure
+interface StockAvailabilityResponse {
+  [provinceName: string]: LocationMap;
+}
 
 const urlLinks: any = [
   {
@@ -122,7 +143,7 @@ const expandItemTotalDialogue = async (page: Page): Promise<any[]> => {
 }
 
 // Todo, refactor this to be a bit more simple and readable. A bit of a headache with how we're dealing with nested maps here.
-const displayResults = (allResults: Result[][]): void => {
+const displayResults = (allResults: Result[][]): StockAvailabilityResponse => {
   // Check if there are any results.
   const hasResults: boolean = allResults.some((resultArr: Result[]): boolean => resultArr.length > 0);
 
@@ -131,24 +152,23 @@ const displayResults = (allResults: Result[][]): void => {
     return;
   }
 
-  // Process and display results.
-  console.log("\n===== Stock Availability Report =====");
-
-  const finalResult: any = {}
+  const finalResult: StockAvailabilityResponse = {}
 
   // Build unique list of provinces GPU's were found at.
   allResults.forEach((results: Result[]) => {
     results.forEach((result: Result) => {
+      // Initialize a province if needed in our final result.
       if (!(result.province in finalResult)) {
         finalResult[result.province] = {}
       }
-    })
-  })
 
-  // Create our final JSOn payload to return from our API we will wrap around this.
-  allResults.forEach((results: Result[]) => {
-    results.forEach((result: Result) => {
-      finalResult[result.province][result.location] = result;
+      // Initialize location if needed.
+      if (!(result.location in finalResult[result.province])) {
+        finalResult[result.province][result.location] = {};
+      }
+
+      // Add the current GPU by SKU to avoid overwriting.
+      finalResult[result.province][result.location][result.sku] = result;
     })
   })
 
