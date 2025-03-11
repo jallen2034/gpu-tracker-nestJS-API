@@ -1,6 +1,11 @@
 import { Browser, chromium, ElementHandle, Page } from 'playwright';
 
-interface Result { province: string, location: string, quantity: number }
+interface StoreAvailability {
+  location: string;
+  quantity: number;
+}
+
+interface Result { sku: string, province: string, location: string, quantity: number }
 
 const urlLinks: any = [
   {
@@ -26,7 +31,7 @@ const isSoldOut = (innerHtml: string): boolean => {
   return innerHtml.toLowerCase().includes('sold out');
 };
 
-const countTotals = async (page: Page): Promise<Result[]> => {
+const countTotals = async (page: Page, sku: string): Promise<Result[]> => {
   const results: Result[] = [];
 
   try {
@@ -53,18 +58,19 @@ const countTotals = async (page: Page): Promise<Result[]> => {
         const locationElement = await row.$('.col-3');
         if (!locationElement) continue;
 
-        const location = (await locationElement.innerText()).trim();
+        const location: string = (await locationElement.innerText()).trim();
 
         // Get the quantity - we need to check if it has inventory
         const quantityElement = await row.$('.shop-online-box');
         if (!quantityElement) continue;
 
-        const quantityText = (await quantityElement.innerText()).trim();
-        const quantity = parseInt(quantityText, 10);
+        const quantityText: string = (await quantityElement.innerText()).trim();
+        const quantity: number = parseInt(quantityText, 10);
 
         // Only include stores with stock > 0
         if (quantity > 0) {
           results.push({
+            sku,
             province,
             location,
             quantity
@@ -82,8 +88,8 @@ const countTotals = async (page: Page): Promise<Result[]> => {
 }
 
 const expandItemTotalDialogue = async (page: Page): Promise<any[]> => {
-  const buttonSelector = 'button[data-toggle="collapse"]'; // Selector for the buttons
-  const plusIconSelector = 'i.fa-regular.collapse-icon.f-20.position-absolute.right-2.fa-plus'; // The selector for the plus icons
+  const buttonSelector: string = 'button[data-toggle="collapse"]'; // Selector for the buttons
+  const plusIconSelector: string = 'i.fa-regular.collapse-icon.f-20.position-absolute.right-2.fa-plus'; // The selector for the plus icons
   const results: any[] = [];
 
   try {
@@ -120,16 +126,90 @@ const expandItemTotalDialogue = async (page: Page): Promise<any[]> => {
   }
 }
 
-const logResults = (sku: string, results: Result[]) => {
-  console.log(`Results for the following SKU: ${sku}`);
-  console.log(`-------------------------------------\n`);
-  console.log(results);
-  console.log(`-------------------------------------\n`);
-};
+const displayResults = (allResults: Result[][]): void => {
+  // Check if there are any results.
+  const hasResults: boolean = allResults.some((resultArr: Result[]): boolean => resultArr.length > 0);
+
+  if (!hasResults) {
+    console.log("No stock available :( tough luck iuri");
+    return;
+  }
+
+  // Process and display results.
+  console.log("\n===== Stock Availability Report =====");
+
+  // Group first by SKU, then by province.
+  const skuMap: Map<string, Map<string, Map<string, number>>> = new Map();
+
+  // Flatten and organize all results.
+  allResults.forEach((resultArr: Result[]) => {
+    resultArr.forEach((result: Result) => {
+      // If a SKU map doesn't exist, initalize one.
+      if (!skuMap.has(result.sku)) {
+        skuMap.set(result.sku, new Map<string, Map<string, number>>());
+      }
+
+      const provinceMap: Map<string, Map<string, number>> = skuMap.get(result.sku)!;
+
+      // Initialize province map if not exists.
+      if (!provinceMap.has(result.province)) {
+        provinceMap.set(result.province, new Map<string, number>());
+      }
+
+      // Get location map for this province.
+      const locationMap: Map<string, number> = provinceMap.get(result.province)!;
+
+      // Update quantity (use the highest if duplicate).
+      const currentQuantity: number = locationMap.get(result.location) || 0;
+      const maxValueBetweenQuantities: number = Math.max(currentQuantity, result.quantity)
+      locationMap.set(result.location, maxValueBetweenQuantities);
+    })
+  })
+
+  // Display results organized by SKU then Province.
+  skuMap.forEach((provinceMap:  Map<string, Map<string, number>>, sku: string) => {
+    console.log(`\n${sku}`);
+    console.log("=".repeat(sku.length));
+
+    // Process each province for this SKU
+    provinceMap.forEach((locationMap: Map<string, number>, province: string) => {
+      console.log(`\n  ${province}:`);
+      console.log(`  ${"-".repeat(province.length)}`);
+
+      // Convert Map to array for sorting
+      const locations: StoreAvailability[] = [];
+
+      locationMap.forEach((quantity: number, location: string) => {
+        locations.push({ location, quantity });
+      });
+
+      // Sort locations by quantity (highest first).
+      locations.sort((a: StoreAvailability, b: StoreAvailability): number => b.quantity - a.quantity);
+
+      // Display locations with appropriate styling.
+      for (const item of locations) {
+        let quantityDisplay: string = `${item.quantity} units`;
+
+        // Add visual indicator based on stock levels.
+        if (item.quantity > 5) {
+          quantityDisplay = `${item.quantity} units (High Stock)`;
+        } else if (item.quantity > 2) {
+          quantityDisplay = `${item.quantity} units (Medium Stock)`;
+        } else {
+          quantityDisplay = `${item.quantity} units (Limited Stock)`;
+        }
+
+        console.log(`    • ${item.location}: ${quantityDisplay}`);
+      }
+    });
+  });
+
+
+  console.log("\n=====================================");
+}
 
 const ccAvailabilityStore = async () => {
-  const availableInBc: any[] = [];
-
+  const availableInBc: Result[][] = [];
   const browser: Browser = await chromium.launch({ headless: false });
   const page: Page = await browser.newPage();
 
@@ -139,7 +219,6 @@ const ccAvailabilityStore = async () => {
       const sku: string = url.sku;
 
       try {
-        console.log(`Parsing: ${targetUrl}`);
         await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
 
         // Now, target the <p> element inside the #storeinfo div
@@ -151,22 +230,18 @@ const ccAvailabilityStore = async () => {
 
         // Get the innerHTML of the <p> element
         const innerHtml: string = await innerPElement.innerHTML();
-
         const soldOutInStore: boolean = isSoldOut(innerHtml)
 
-        if (soldOutInStore) {
-          console.log("The product is sold out in store.");
-        } else {
+        if (!soldOutInStore) {
           const checkOtherStoresElement = await page.$('span.link-active'); // Selector for "Check Other Stores"
 
           if (checkOtherStoresElement) {
             await checkOtherStoresElement.click();  // Click the element to open the counts dialog.
             await expandItemTotalDialogue(page);
-            const results: Result[]= await countTotals(page)
-            logResults(sku, results)
+            const results: Result[]= await countTotals(page, sku)
+            availableInBc.push(results)
           }
         }
-
       } catch (error) {
         console.error(`Error processing ${sku}: ${error}`);
       }
@@ -175,20 +250,11 @@ const ccAvailabilityStore = async () => {
     await browser.close(); // Make sure the browser is closed even if errors occur
   }
 
-  if (availableInBc.length > 0) {
-    console.log("\nStock Available in British Columbia:");
-
-    for (const result of availableInBc) {
-      for (const availability of result.availability) {
-        console.log(`- ${availability.location.toLowerCase()} : ${availability.quantity}`);
-      }
-    }
-  } else {
-    console.log("No stock available :( tough luck iuri");
-  }
+  // Use the new display function
+  displayResults(availableInBc);
 };
 
-const runTasks = async (options = {}) => {
+const runTasks = async () => {
   const maxRuns = 1;
   let runCount: number = 0;
 
