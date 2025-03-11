@@ -1,10 +1,5 @@
 import { Browser, chromium, ElementHandle, Page } from 'playwright';
 
-interface StoreAvailability {
-  location: string;
-  quantity: number;
-}
-
 interface Result { sku: string, province: string, location: string, quantity: number }
 
 const urlLinks: any = [
@@ -23,7 +18,7 @@ const urlLinks: any = [
   {
     "targetURL": "https://www.canadacomputers.com/en/powered-by-amd/267255/asus-prime-radeon-rx-9070-oc-edition-16gb-gddr6prime-rx9070-o16g-prime-rx9070-o16g.html",
     "sku": "ASUS Prime Radeon RX 9070 OC Edition 16GB GDDR6PRIME-RX9070-O16G"
-  } // You can add any other GPU's into this list from Canada Computers site, and they will just work.
+  },
 ];
 
 // Helper function to check if "Sold Out" is in the innerHTML
@@ -139,74 +134,25 @@ const displayResults = (allResults: Result[][]): void => {
   // Process and display results.
   console.log("\n===== Stock Availability Report =====");
 
-  // Group first by SKU, then by province.
-  const skuMap: Map<string, Map<string, Map<string, number>>> = new Map();
+  const finalResult: any = {}
 
-  // Flatten and organize all results.
-  allResults.forEach((resultArr: Result[]) => {
-    resultArr.forEach((result: Result) => {
-      // If a SKU map doesn't exist, initalize one.
-      if (!skuMap.has(result.sku)) {
-        skuMap.set(result.sku, new Map<string, Map<string, number>>());
+  // Build unique list of provinces GPU's were found at.
+  allResults.forEach((results: Result[]) => {
+    results.forEach((result: Result) => {
+      if (!(result.province in finalResult)) {
+        finalResult[result.province] = {}
       }
-
-      const provinceMap: Map<string, Map<string, number>> = skuMap.get(result.sku)!;
-
-      // Initialize province map if not exists.
-      if (!provinceMap.has(result.province)) {
-        provinceMap.set(result.province, new Map<string, number>());
-      }
-
-      // Get location map for this province.
-      const locationMap: Map<string, number> = provinceMap.get(result.province)!;
-
-      // Update quantity (use the highest if duplicate).
-      const currentQuantity: number = locationMap.get(result.location) || 0;
-      const maxValueBetweenQuantities: number = Math.max(currentQuantity, result.quantity)
-      locationMap.set(result.location, maxValueBetweenQuantities);
     })
   })
 
-  // Display results organized by SKU then Province.
-  skuMap.forEach((provinceMap:  Map<string, Map<string, number>>, sku: string) => {
-    console.log(`\n${sku}`);
-    console.log("=".repeat(sku.length));
+  // Create our final JSOn payload to return from our API we will wrap around this.
+  allResults.forEach((results: Result[]) => {
+    results.forEach((result: Result) => {
+      finalResult[result.province][result.location] = result;
+    })
+  })
 
-    // Process each province for this SKU
-    provinceMap.forEach((locationMap: Map<string, number>, province: string) => {
-      console.log(`\n  ${province}:`);
-      console.log(`  ${"-".repeat(province.length)}`);
-
-      // Convert Map to array for sorting
-      const locations: StoreAvailability[] = [];
-
-      locationMap.forEach((quantity: number, location: string) => {
-        locations.push({ location, quantity });
-      });
-
-      // Sort locations by quantity (highest first).
-      locations.sort((a: StoreAvailability, b: StoreAvailability): number => b.quantity - a.quantity);
-
-      // Display locations with appropriate styling.
-      for (const item of locations) {
-        let quantityDisplay: string = `${item.quantity} units`;
-
-        // Add visual indicator based on stock levels.
-        if (item.quantity > 5) {
-          quantityDisplay = `${item.quantity} units (High Stock)`;
-        } else if (item.quantity > 2) {
-          quantityDisplay = `${item.quantity} units (Medium Stock)`;
-        } else {
-          quantityDisplay = `${item.quantity} units (Limited Stock)`;
-        }
-
-        console.log(`    • ${item.location}: ${quantityDisplay}`);
-      }
-    });
-  });
-
-
-  console.log("\n=====================================");
+  return finalResult
 }
 
 const ccAvailabilityStore = async () => {
@@ -252,7 +198,7 @@ const ccAvailabilityStore = async () => {
   }
 
   // Use the new display function
-  displayResults(availableInBc);
+  return displayResults(availableInBc)
 };
 
 const runTasks = async () => {
@@ -268,7 +214,9 @@ const runTasks = async () => {
   while (runCount < maxRuns) {
     try {
       console.log("------------- Running tasks ----------------");
-      await ccAvailabilityStore();
+      const finalAPIResponse = await ccAvailabilityStore();
+      console.log("Response JSON from scraper");
+      console.log(finalAPIResponse);
       console.log("------------- End of batch ----------------");
     } catch (error) {
       console.error(`Error in runTasks: ${error}`);
