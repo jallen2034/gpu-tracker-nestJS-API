@@ -1,28 +1,5 @@
 import { Browser, chromium, ElementHandle, Page } from 'playwright';
 
-// Base result returned from scraping.
-interface Result {
-  sku: string;
-  province: string;
-  location: string;
-  quantity: number;
-}
-
-// Maps SKUs to their Result objects at a specific location.
-interface SkuMap {
-  [skuName: string]: Result;
-}
-
-// Maps locations to their available SKUs.
-interface LocationMap {
-  [locationName: string]: SkuMap;
-}
-
-// The complete response structure
-interface StockAvailabilityResponse {
-  [provinceName: string]: LocationMap;
-}
-
 const urlLinks: any = [
   {
     "targetURL": "https://www.canadacomputers.com/en/powered-by-nvidia/268153/zotac-gaming-geforce-rtx-5080-solid-oc-16gb-gddr7-zt-b50800j-10p.html",
@@ -42,6 +19,29 @@ const urlLinks: any = [
   },
 ];
 
+// Base result returned from scraping.
+interface Result {
+  sku: string;
+  province: string;
+  location: string;
+  quantity: number;
+}
+
+// Maps SKUs to their Result objects at a specific location.
+interface SkuMap {
+  [skuName: string]: Result;
+}
+
+// Maps locations to their available SKUs.
+interface LocationMap {
+  [locationName: string]: SkuMap;
+}
+
+// The complete response structure.
+interface StockAvailabilityResponse {
+  [provinceName: string]: LocationMap;
+}
+
 // Helper function to check if "Sold Out" is in the innerHTML
 const isSoldOut = (innerHtml: string): boolean => {
   return innerHtml.toLowerCase().includes('sold out');
@@ -54,11 +54,11 @@ const countTotals = async (page: Page, sku: string): Promise<Result[]> => {
     // Wait for the modal content to be fully loaded
     await page.waitForSelector('.modal-body', { state: 'attached' });
 
-    // Get all province sections
+    // Get all province sections.
     const provinceSections: ElementHandle<SVGElement | HTMLElement>[] = await page.$$('.card');
 
     for (const section of provinceSections) {
-      // Get the province name
+      // Get the province name.
       const provinceNameElement
         = await section.$('.btn-block');
       if (!provinceNameElement) continue;
@@ -66,17 +66,17 @@ const countTotals = async (page: Page, sku: string): Promise<Result[]> => {
       const provinceText: string = await provinceNameElement.innerText();
       const province: string = provinceText.trim();
 
-      // Find all store rows within this province section
+      // Find all store rows within this province section.
       const storeRows: ElementHandle<SVGElement | HTMLElement>[] = await section.$$('.row.mx-0.align-items-center');
 
       for (const row of storeRows) {
-        // Get the store name
+        // Get the store name.
         const locationElement = await row.$('.col-3');
         if (!locationElement) continue;
 
         const location: string = (await locationElement.innerText()).trim();
 
-        // Get the quantity - we need to check if it has inventory
+        // Get the quantity - we need to check if it has inventory.
         const quantityElement = await row.$('.shop-online-box');
         if (!quantityElement) continue;
 
@@ -118,11 +118,8 @@ const expandItemTotalDialogue = async (page: Page): Promise<any[]> => {
     if (buttons.length > 0) {
       // Click on each button sequentially to expand the sections.
       for (const button of buttons) {
-        // Click the button to expand the collapse section.
         await button.click();
-
-        // Wait for a small delay to ensure content is loaded/expanded.
-        await page.waitForTimeout(500); // Adjust timeout as necessary
+        await page.waitForTimeout(500);
 
         // After expanding the collapse, click the plus icon if it exists.
         const plusIcon: any = await button.$(plusIconSelector);
@@ -142,14 +139,14 @@ const expandItemTotalDialogue = async (page: Page): Promise<any[]> => {
   }
 }
 
-// Todo, refactor this to be a bit more simple and readable. A bit of a headache with how we're dealing with nested maps here.
 const displayResults = (allResults: Result[][]): StockAvailabilityResponse => {
-  // Check if there are any results.
-  const hasResults: boolean = allResults.some((resultArr: Result[]): boolean => resultArr.length > 0);
+  const hasResults: boolean = allResults.some((
+    resultArr: Result[]): boolean => resultArr.length > 0
+  );
 
   if (!hasResults) {
     console.log("No stock available :( tough luck iuri");
-    return;
+    return {} as StockAvailabilityResponse;
   }
 
   const finalResult: StockAvailabilityResponse = {}
@@ -159,7 +156,7 @@ const displayResults = (allResults: Result[][]): StockAvailabilityResponse => {
     results.forEach((result: Result) => {
       // Initialize a province if needed in our final result.
       if (!(result.province in finalResult)) {
-        finalResult[result.province] = {}
+        finalResult[result.province] = {};
       }
 
       // Initialize location if needed.
@@ -175,7 +172,7 @@ const displayResults = (allResults: Result[][]): StockAvailabilityResponse => {
   return finalResult
 }
 
-const ccAvailabilityStore = async () => {
+const ccAvailabilityStore = async (): Promise<StockAvailabilityResponse> => {
   const availableInBc: Result[][] = [];
   const browser: Browser = await chromium.launch({ headless: false });
   const page: Page = await browser.newPage();
@@ -197,7 +194,7 @@ const ccAvailabilityStore = async () => {
 
         // Get the innerHTML of the <p> element
         const innerHtml: string = await innerPElement.innerHTML();
-        const soldOutInStore: boolean = isSoldOut(innerHtml)
+        const soldOutInStore: boolean = isSoldOut(innerHtml);
 
         if (!soldOutInStore) {
           const checkOtherStoresElement = await page.$('span.link-active'); // Selector for "Check Other Stores"
@@ -205,8 +202,8 @@ const ccAvailabilityStore = async () => {
           if (checkOtherStoresElement) {
             await checkOtherStoresElement.click();  // Click the element to open the counts dialog.
             await expandItemTotalDialogue(page);
-            const results: Result[]= await countTotals(page, sku)
-            availableInBc.push(results)
+            const results: Result[]= await countTotals(page, sku);
+            availableInBc.push(results);
           }
         }
       } catch (error) {
@@ -218,7 +215,7 @@ const ccAvailabilityStore = async () => {
   }
 
   // Use the new display function
-  return displayResults(availableInBc)
+  return displayResults(availableInBc);
 };
 
 const runTasks = async () => {
@@ -234,9 +231,9 @@ const runTasks = async () => {
   while (runCount < maxRuns) {
     try {
       console.log("------------- Running tasks ----------------");
-      const finalAPIResponse = await ccAvailabilityStore();
+      const finalAPIResponse: StockAvailabilityResponse = await ccAvailabilityStore();
       console.log("Response JSON from scraper");
-      console.log(finalAPIResponse);
+      console.log(JSON.stringify(finalAPIResponse, null, 2));
       console.log("------------- End of batch ----------------");
     } catch (error) {
       console.error(`Error in runTasks: ${error}`);
