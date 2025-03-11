@@ -126,6 +126,7 @@ const expandItemTotalDialogue = async (page: Page): Promise<any[]> => {
   }
 }
 
+// Todo, refactor this to be a bit more simple and readable. A bit of a headache with how we're dealing with nested maps here.
 const displayResults = (allResults: Result[][]): void => {
   // Check if there are any results.
   const hasResults: boolean = allResults.some((resultArr: Result[]): boolean => resultArr.length > 0);
