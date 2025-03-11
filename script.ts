@@ -173,7 +173,7 @@ const displayResults = (allResults: Result[][]): StockAvailabilityResponse => {
 }
 
 const ccAvailabilityStore = async (): Promise<StockAvailabilityResponse> => {
-  const availableInBc: Result[][] = [];
+  const availableItems: Result[][] = [];
   const browser: Browser = await chromium.launch({ headless: false });
   const page: Page = await browser.newPage();
 
@@ -200,10 +200,10 @@ const ccAvailabilityStore = async (): Promise<StockAvailabilityResponse> => {
           const checkOtherStoresElement = await page.$('span.link-active'); // Selector for "Check Other Stores"
 
           if (checkOtherStoresElement) {
-            await checkOtherStoresElement.click();  // Click the element to open the counts dialog.
+            await checkOtherStoresElement.click(); // Click the element to open the counts dialog.
             await expandItemTotalDialogue(page);
             const results: Result[]= await countTotals(page, sku);
-            availableInBc.push(results);
+            availableItems.push(results);
           }
         }
       } catch (error) {
@@ -215,7 +215,7 @@ const ccAvailabilityStore = async (): Promise<StockAvailabilityResponse> => {
   }
 
   // Use the new display function
-  return displayResults(availableInBc);
+  return displayResults(availableItems);
 };
 
 const runTasks = async () => {
