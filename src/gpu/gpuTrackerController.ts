@@ -1,12 +1,11 @@
-// src/gpu/gpu.controller.ts
 import { Controller, Get, Post, Body, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { GpuStockCheckerService, StockAvailabilityResponse } from "./gpu-stock-checker.service";
 
-interface AddGpuRequestBody { message: string; sku: string; }
+interface AddGpuRequestResponse { message: string; sku: string; }
 
 /* Data Transfer Object for adding a new GPU to the tracking list.
  * Requires both the product URL and a descriptive SKU identifier. */
-export class AddGpuDto {
+interface AddGpuRequestBody {
   targetURL: string;
   sku: string;
 }
@@ -55,7 +54,7 @@ export class GpuTrackerController {
    * Requires a product URL and descriptive SKU identifier.
    * Validates input data and prevents duplicate entries. */
   @Post()
-  addGpu(@Body() addGpuDto: AddGpuDto): AddGpuRequestBody {
+  addGpu(@Body() addGpuDto: AddGpuRequestBody): AddGpuRequestResponse {
     try {
       // Validate the input.
       if (!addGpuDto.targetURL || !addGpuDto.sku) {
@@ -66,7 +65,9 @@ export class GpuTrackerController {
       }
 
       this.gpuService.addGpu(addGpuDto.targetURL, addGpuDto.sku);
-      return { message: 'GPU added successfully', sku: addGpuDto.sku };
+
+      const responseBody: AddGpuRequestResponse = { message: 'GPU added successfully', sku: addGpuDto.sku }
+      return responseBody;
     } catch (error) {
       // Check for specific error types to return appropriate status codes.
       if (error.message.includes('already exists')) {
