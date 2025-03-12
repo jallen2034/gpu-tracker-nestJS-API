@@ -8,6 +8,10 @@ A NestJS API service that tracks and monitors GPU stock availability across Cana
 - **Dynamic GPU Tracking**: Add or retrieve GPU models/skus through API endpoints.
 - **Detailed Availability**: Shows exact quantities at each retail location.
 
+## Video Demo
+
+https://github.com/user-attachments/assets/9f1481a7-b516-4b86-9a34-4e6c8e63bb19
+
 ## Architecture
 The project has been migrated from a standalone script to a full NestJS API service:
 
