@@ -156,6 +156,45 @@ export class GpuStockCheckerService {
     return finalResult
   }
 
+  private async checkGpuAvailability(page: Page, targetUrl: string, sku: string): Promise<Result[]> {
+    try {
+      // Navigate to the product page
+      await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
+
+      // Check if the product info element exists.
+      const innerPElement = await page.$('#storeinfo > div > div > p:nth-child(3)');
+
+      if (!innerPElement) {
+        return [];
+      }
+
+      // Check if the product is sold out
+      const innerHtml: string = await innerPElement.innerHTML();
+      const soldOutInStore: boolean = this.isSoldOut(innerHtml);
+
+      if (soldOutInStore) {
+        return [];
+      }
+
+      // Look for the "Check Other Stores" button.
+      const checkOtherStoresElement = await page.$('span.link-active');
+
+      if (!checkOtherStoresElement) {
+        return [];
+      }
+
+      // Click to open the store availability dialog.
+      await checkOtherStoresElement.click();
+      await this.expandItemTotalDialogue(page);
+
+      // Get stock information from all locations.
+      return await this.countTotals(page, sku);
+    } catch (error) {
+      this.logger.error(`Error checking availability for ${sku}: ${error}`);
+      throw error;
+    }
+  }
+
   // Main scraping method.
   async getGpuAvailability(): Promise<StockAvailabilityResponse> {
     const availableItems: Result[][] = [];
@@ -164,39 +203,17 @@ export class GpuStockCheckerService {
 
     try {
       for (const url of this.urlLinks) {
-        const targetUrl: string = url.targetURL;
-        const sku: string = url.sku;
+        const results: Result[] = await this.checkGpuAvailability(page, url.targetURL, url.sku);
 
-        try {
-          await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
-
-          // Now, target the <p> element inside the #storeinfo div
-          const innerPElement = await page.$('#storeinfo > div > div > p:nth-child(3)');
-
-          if (!innerPElement) {
-            continue;
-          }
-
-          // Get the innerHTML of the <p> element
-          const innerHtml: string = await innerPElement.innerHTML();
-          const soldOutInStore: boolean = this.isSoldOut(innerHtml);
-
-          if (!soldOutInStore) {
-            const checkOtherStoresElement = await page.$('span.link-active'); // Selector for "Check Other Stores"
-
-            if (checkOtherStoresElement) {
-              await checkOtherStoresElement.click(); // Click the element to open the counts dialog.
-              await this.expandItemTotalDialogue(page);
-              const results: Result[] = await this.countTotals(page, sku);
-              availableItems.push(results);
-            }
-          }
-        } catch (error) {
-          this.logger.error(`Error processing ${sku}: ${error}`);
+        if (results.length > 0) {
+          availableItems.push(results);
         }
       }
+    } catch (error) {
+      console.error("Unexpected error in getGpuAvailability(): ", error);
+      throw error;
     } finally {
-      await browser.close(); // Make sure the browser is closed even if errors occur.
+      await browser.close();
     }
 
     return this.displayResults(availableItems);
