@@ -1,0 +1,52 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.pnpm-debug.log
+package-lock.json
+yarn.lock
+.pnp.*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build and output directories
+/dist
+/build
+/out
+/.next
+/.nuxt
+/.cache
+
+# Logs
+logs
+*.log
+
+# IDE and editor folders
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.project
+.classpath
+.settings/
+
+# Testing
+/coverage
+.nyc_output
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# DuckDB
+*.duckdb
+*.duckdb-wal
+*.duckdb-shm
