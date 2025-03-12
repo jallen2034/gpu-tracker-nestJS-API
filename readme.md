@@ -1,154 +1,179 @@
-# Canada Computers GPU Stock Checker
+# Canada Computers GPU Stock Checker API
 
-A TypeScript application using Playwright to automatically check stock availability for GPUs across Canada Computers stores.
-
+A NestJS API service that tracks and monitors GPU stock availability across Canada Computers stores in real-time.
 ## Features
 
-- Monitors GPU stock for multiple SKUs in real-time.
-- Checks availability across all Canada Computers stores.
-- Provides detailed output for each location with available stock.
-- Easy to configure with additional GPU models.
+- **Organized Results:** Data is structured by province, location, and SKU
+- **RESTful API**: Access stock information through HTTP endpoints
+- **Dynamic GPU Tracking**: Add or retrieve GPU models/skus through API endpoints.
+- **Detailed Availability**: Shows exact quantities at each retail location.
+
+## Architecture
+The project has been migrated from a standalone script to a full NestJS API service:
+
+- **Controller Layer**: Handles HTTP requests and route management from the client.
+- **Service Layer**: Contains business logic and scraping functionality with Playwright.
+- **Error Handling:** Proper HTTP status codes and error messages
+
+## API Endpoints
+
+#### Check GPU Availability
+
+Returns real-time stock information for all tracked GPUs, organized by province, location, and SKU.
+````
+GET /gpus
+````
+Expected 201 (Success) response body:
+
+```json
+{
+  "Ontario": {
+    "Waterloo": {
+      "MSI GeForce RTX 5080 16GB Suprim SOC GDDR7": {
+        "sku": "MSI GeForce RTX 5080 16GB Suprim SOC GDDR7",
+        "province": "Ontario",
+        "location": "Waterloo",
+        "quantity": 1
+      },
+      "ASUS Prime Radeon RX 9070 OC Edition 16GB GDDR6": {
+        "sku": "ASUS Prime Radeon RX 9070 OC Edition 16GB GDDR6",
+        "province": "Ontario",
+        "location": "Waterloo",
+        "quantity": 4
+      }
+    },
+    "Toronto": {
+      "...": {} // Etc...
+    }
+  },
+  "Quebec": {
+    "...": {} // Etc...
+  }
+}
+```
+
+Returns a list of all GPUs currently being tracked by the system.
+````
+GET /gpus/tracked
+````
+Adds a new GPU to the tracking system.
+````
+POST /gpus
+````
+
+Request body:
+
+```json
+{
+  "targetURL": "https://www.canadacomputers.com/en/powered-by-nvidia/[product-url]",
+  "sku": "Descriptive GPU SKU Name"
+}
+```
+
+Expected 201 (Success) response body:
+
+```json
+{
+  "message": "GPU added successfully",
+  "sku": "Descriptive GPU SKU Name"
+}
+```
+
 
 ## Prerequisites
 
 - Node.js (v16 or later).
 - npm (v7 or later).
+- NestJS CLI (optional, for development)
 
 ## Setup Guide
 
-### Initial Setup
+### Installation:
 
-1. Create a new directory for your project:
-   ```bash
-   mkdir canada-computers-gpu-checker
-   cd canada-computers-gpu-checker
-   ```
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/canada-computers-gpu-checker.git
+cd canada-computers-gpu-checker
+```
+2. Install dependencies:
+```bash
+npm install 
+```
+3. Install Playwright browsers:
+```json
+npx playwright install chromium
+```
 
-2. Create the project structure:
-   ```bash
-   mkdir -p src
-   ```
+## Running the API
 
-3. Initialize npm project:
-   ```bash
-   npm init -y
-   ```
-
-4. Install dependencies:
-   ```bash
-   npm install playwright
-   npm install --save-dev @types/node ts-node typescript prettier
-   ```
-
-5. Install Playwright browsers:
-   ```bash
-   npx playwright install chromium
-   ```
-
-## Running the Application
-
-Run the application with:
+Start the NestJS server:
 
 ```bash
-npm start
+npm run start
 ```
 
-## Usage
+For development with auto-reload:
 
-The script will:
-1. Launch a Chromium browser
-2. Visit each configured GPU page
-3. Check if the item is in stock in-store
-4. If available, click "Check Other Stores" and parse all location data
-5. Display detailed stock information for all locations
-
-## Output
-
-The script provides detailed console output:
-
+```bash
+npm run start:dev
 ```
-------------- Running tasks ----------------
-Parsing: https://www.canadacomputers.com/en/powered-by-nvidia/268153/zotac-gaming-geforce-rtx-5080-solid-oc-16gb-gddr7-zt-b50800j-10p.html
-Total locations with stock: 14
-Results for the following SKU: ZOTAC GAMING RTX 5080 Solid OC 16GB GDDR7
--------------------------------------
+## Technical Implementation
 
-[
-  { province: 'Ontario', location: 'Waterloo', quantity: 4 },
-  { province: 'Ontario', location: 'Barrie', quantity: 3 },
-  { province: 'Ontario', location: 'Cambridge', quantity: 1 },
-  ...
-]
--------------------------------------
+The project has been restructured to follow NestJS patterns:
 
-------------- End of batch ----------------
-Task runner complete
-```
+1. **Controller** (`gpu.controller.ts`): Handles HTTP requests, input validation, and response formatting.
+2. **Service** (`gpu-stock-checker.service.ts`): Contains core scraping logic, GPU tracking, and result processing.
+3. **DTOs**: Define the structure of request/response data.
+4. **Interfaces**: Type definitions for the stock availability data structure.
+
+
+## **Key Components**
+- **Web Scraping**: Uses Playwright to navigate and extract data from Canada Computers website.
+- **API Endpoints**: RESTful HTTP endpoints for interacting with the service.
+- **Error Handling**: Provides appropriate HTTP status codes and error messages.
+- **Logging**: Comprehensive logging of scraping activities and errors
 
 ## Customization
+Create a `.env` file to customize the application behavior:
 
-### Continuous Monitoring
-
-To run the script continuously and check for stock at regular intervals, modify the `runTasks` function:
-
-```typescript
-const runTasks = async (options = {}) => {
-  // Change to run indefinitely
-  let running = true;
-
-  // Setup proper exit handling.
-  process.on('SIGINT', () => {
-    console.log('\nGracefully shutting down...');
-    running = false;
-    process.exit(0);
-  });
-
-  while (running) {
-    try {
-      console.log("------------- Running tasks ----------------");
-      await ccAvailabilityStore();
-      console.log("------------- End of batch ----------------");
-    } catch (error) {
-      console.error(`Error in runTasks: ${error}`);
-    }
-
-    console.log("Waiting for the next check...");
-    // Add sleep between runs (e.g., 5 minutes = 300000ms)
-    await new Promise(resolve => setTimeout(resolve, 300000));
-  }
-};
+```dotenv
+PORT=3000
+HEADLESS_MODE=true
+CHECK_INTERVAL=300000
 ```
 
-### Headless Mode
+## Future Development
 
-To run the browser in headless mode (no visible browser window), modify:
+While this roadmap is ambitious and comprehensive, even implementing a third of these features would provide significant learning opportunities for me. The journey of building these components will involve exploring new technologies, solving interesting problems, and creating something genuinely useful for GPU nerds like myself.
 
-```typescript
-const browser: Browser = await chromium.launch({ headless: false });
-```
+### Interactive Frontend Interface
+- Build a responsive React single-page application with a real-time GPU availability dashboard.
+- Support mobile devices for checking stock on-the-go.
+- Implement interactive maps showing stock availability relative to user location.
+- Develop some customizable alert systems for price and quantity thresholds.
+- Display historical availability and pricing trends with interactive charts (ShadCN UI Charts).
 
-to:
+### Comprehensive Product Database
+- Create some sort of automatic crawler that indexes the entire Canada Computers GPU catalog.
+- Implement DuckDB for efficient storage of product and price history data.
+- Use web scraping practices (delayed requests, request limits, rotating IPs) to avoid me getting rekt/blocked.
+- Build an admin dashboard to monitor data collection health and performance.
 
-```typescript
-const browser: Browser = await chromium.launch({ headless: true });
-```
+### Multi-Retailer Comparison Tools
+- Expand data collection to include Memory Express, Newegg, Best Buy, and Amazon.
+- Track price history across retailers with configurable price drop alerts.
+- Provide a unified search interface across all active retailers with filtering by model and specifications.
+- Develop some sort of deal-ranking system based on the price and the availability of a specific GPU via it's SKU.
 
-## Troubleshooting
+### Global Availability Support
+- Support multiple regions including Canada and Australia.
+- Integrate popular retailers in each region (PC Case Gear, Scorptec for Australia).
+- Offer currency conversion for straightforward price comparisons (AUD vs CAD).
+- Optimize data collection to accommodate regional differences.
 
-### Common Issues
-
-1. **Browser launch fails**
-    - Make sure you've installed Playwright browsers with `npx playwright install chromium`
-    - Try running with explicit path: `PLAYWRIGHT_BROWSERS_PATH=0 npm start`
-
-2. **TypeScript errors**
-    - Check your imports and interfaces
-    - Make sure you're using TypeScript syntax correctly
-
-3. **Selector errors**
-    - Website structure might have changed
-    - Debug with `console.log` or use Playwright's debugging tools
-
-## License
-
-This project is licensed under the MIT License.
+### User Personalization
+- Implement secure authentication with social login integration.
+- Allow users to create and manage GPU watchlists.
+- Provide multiple notification options (email, SMS, browser push).
+- Enable sharing availability alerts with others.
+- Create some sort of engagement/achievement system to reward active users for (this one feels a bit crack like lmao).
