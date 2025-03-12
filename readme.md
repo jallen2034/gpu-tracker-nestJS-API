@@ -123,8 +123,7 @@ The project has been restructured to follow NestJS patterns:
 
 1. **Controller** (`gpu.controller.ts`): Handles HTTP requests, input validation, and response formatting.
 2. **Service** (`gpu-stock-checker.service.ts`): Contains core scraping logic, GPU tracking, and result processing.
-3. **DTOs**: Define the structure of request/response data.
-4. **Interfaces**: Type definitions for the stock availability data structure.
+3**Interfaces**: Type definitions for the stock availability data structure.
 
 
 ## **Key Components**
