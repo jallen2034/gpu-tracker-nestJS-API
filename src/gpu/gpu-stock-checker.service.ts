@@ -1,8 +1,6 @@
-// src/gpu/gpu.service.ts - Convert your existing script to a service
 import { Injectable, Logger } from '@nestjs/common';
 import { Browser, chromium, ElementHandle, Page } from 'playwright';
 
-// Retain your existing interfaces
 interface Result {
   sku: string;
   province: string;
@@ -29,7 +27,6 @@ export class GpuStockCheckerService {
   // This will be updated by another Scraper/Script dynamically later and injected into this class when needed with Dependency Injection.
   private urlLinks: any = [];
 
-  // Helper methods (moved from your script)
   private isSoldOut(innerHtml: string): boolean {
     return innerHtml.toLowerCase().includes('sold out');
   }
@@ -38,10 +35,10 @@ export class GpuStockCheckerService {
     const results: Result[] = [];
 
     try {
-      // Wait for the modal content to be fully loaded
+      // Wait for the modal content to be fully loaded.
       await page.waitForSelector('.modal-body', { state: 'attached' });
 
-      // Get all province sections.
+      // Get all province sections..
       const provinceSections: ElementHandle<SVGElement | HTMLElement>[] = await page.$$('.card');
 
       for (const section of provinceSections) {
@@ -199,14 +196,12 @@ export class GpuStockCheckerService {
         }
       }
     } finally {
-      await browser.close(); // Make sure the browser is closed even if errors occur
+      await browser.close(); // Make sure the browser is closed even if errors occur.
     }
 
-    // Use the display function
     return this.displayResults(availableItems);
   }
 
-  // Add a method to get a list of tracked GPUs.
   getTrackedGpus(): { sku: string; url: string }[] {
     try {
       const trackedGpus = this.urlLinks.map((link: any) => ({
@@ -220,7 +215,6 @@ export class GpuStockCheckerService {
     }
   }
 
-  // Add method to add a new GPU to track.
   addGpu(targetURL: string, sku: string): void {
     try {
       if (!targetURL || !sku) {
