@@ -4,7 +4,7 @@ A NestJS API service that tracks and monitors GPU stock availability across Cana
 ## Features
 
 - **Organized Results:** Data is structured by province, location, and SKU
-- **RESTful API**: Access stock information through HTTP endpoints
+- **RESTful API**: Access stock information through HTTP endpoints.
 - **Dynamic GPU Tracking**: Add or retrieve GPU models/skus through API endpoints.
 - **Detailed Availability**: Shows exact quantities at each retail location.
 
@@ -13,7 +13,7 @@ The project has been migrated from a standalone script to a full NestJS API serv
 
 - **Controller Layer**: Handles HTTP requests and route management from the client.
 - **Service Layer**: Contains business logic and scraping functionality with Playwright.
-- **Error Handling:** Proper HTTP status codes and error messages
+- **Error Handling:** Proper HTTP status codes and error messages.
 
 ## API Endpoints
 
@@ -84,7 +84,7 @@ Expected 201 (Success) response body:
 
 - Node.js (v16 or later).
 - npm (v7 or later).
-- NestJS CLI (optional, for development)
+- NestJS CLI (optional, for development).
 
 ## Setup Guide
 
@@ -131,7 +131,7 @@ The project has been restructured to follow NestJS patterns:
 - **Web Scraping**: Uses Playwright to navigate and extract data from Canada Computers website.
 - **API Endpoints**: RESTful HTTP endpoints for interacting with the service.
 - **Error Handling**: Provides appropriate HTTP status codes and error messages.
-- **Logging**: Comprehensive logging of scraping activities and errors
+- **Logging**: Comprehensive logging of scraping activities and errors.
 
 ## Customization
 Create a `.env` file to customize the application behavior:
