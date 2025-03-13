@@ -177,7 +177,7 @@ export class GpuStockCheckerService {
       }
 
       // Look for the "Check Other Stores" button.
-      const checkOtherStoresElement = await page.$('span.link-active');
+      const checkOtherStoresElement = await page.$('a[data-target="#checkothertores"] span.link-active');
 
       if (!checkOtherStoresElement) {
         return [];

@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Logger, Post, Query } from '@nestjs/common';
 import { GpuStockCheckerService, StockAvailabilityResponse } from "./gpu-stock-checker.service";
+import { DirectApiGpuService } from "./DirectAPIGpuService";
 
 interface AddGpuRequestResponse { message: string; sku: string; }
 
@@ -15,10 +16,12 @@ interface AddGpuRequestBody {
  * and add new GPU models to the tracking system. */
 @Controller('gpus')
 export class GpuTrackerController {
-  private readonly logger = new Logger(GpuTrackerController.name);
+  private readonly logger: Logger = new Logger(GpuTrackerController.name);
 
-  constructor(private readonly gpuService: GpuStockCheckerService) {
-  }
+  constructor(
+    private readonly gpuService: GpuStockCheckerService,
+    private readonly directApiGpuService: DirectApiGpuService
+  ) {}
 
   /* Retrieves real-time GPU stock availability across all retail locations.
    * Executes a web scraping operation against Canada Computers for all tracked GPUs.
@@ -30,6 +33,29 @@ export class GpuTrackerController {
     } catch (error) {
       throw new HttpException(
         'Failed to fetch GPU availability',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // Gets a list of all the potential GPU's that Canada Computers has by scraping theri site.
+  @Get('all')
+  async getEntireGPUListCanadaComputers(
+    @Query('maxPages') maxPages: string = '5'
+  ): Promise<any> {
+    try {
+      // Convert string to number and ensure it's valid
+      const maxPagesNum: number = parseInt(maxPages, 10) || 5;
+
+      await this.directApiGpuService.getAllGpus(maxPagesNum);
+      return {
+        message: 'GPUs were loaded into the app successfully',
+        pagesScanned: maxPagesNum
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get GPU list: ${error.message}`);
+      throw new HttpException(
+        'Failed to retrieve the entire list of GPUs',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

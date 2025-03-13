@@ -1,12 +1,13 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+import { INestApplication } from "@nestjs/common";
 
 /* Main entry point for the NestJS GPU Stock Checker API.
  * This file bootstraps the application, configures middleware, and starts the HTTP server. */
 async function bootstrap() {
   /* Bootstrap function to initialize and start the NestJS application.
    * Creates the application instance, configures global middleware, and starts the HTTP server. */
-  const app = await NestFactory.create(AppModule);
+  const app: INestApplication<any> = await NestFactory.create(AppModule);
   app.enableCors();
   app.useGlobalPipes();
 
