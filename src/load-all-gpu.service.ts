@@ -18,7 +18,7 @@ export class LoadAllGpuService {
   ) {}
 
   // Fetches a single page of GPU listings from Canada Computers using the provided page number.
-  private async fetchGpuPage(pageNumber: number, headers?: HeadersInit): Promise<any> {
+  private async fetchGpuPage(pageNumber: number, headers?: HeadersInit): Promise<string> {
     try {
       const response: Response = await fetch(
         `${this.baseUrl}/914/graphics-cards?page=${pageNumber}&ajaxtrue=1&onlyproducts=1`,
@@ -86,10 +86,10 @@ export class LoadAllGpuService {
 
       while (currentPage <= maxPages) {
         // Fetch the current page of GPU listings.
-        const html: any = await this.fetchGpuPage(currentPage)
+        const html: string = await this.fetchGpuPage(currentPage)
 
         // Extract product data from the page HTML.
-        const products: any = this.parseGpuListings(html);
+        const products: GPUProduct[] = this.parseGpuListings(html);
 
         // Exit the loop if no more products found (reached the end of listings).
         if (products.length === 0) {
