@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Logger, Post, Query } from '@nestjs/common';
 import { GpuStockCheckerService, StockAvailabilityResponse } from "./gpu-stock-checker.service";
-import { DirectApiGpuService } from "./DirectAPIGpuService";
+import { LoadAllGpuService } from "./load-all-gpu.service";
 
 interface AddGpuRequestResponse { message: string; sku: string; }
 
@@ -15,12 +15,12 @@ interface AddGpuRequestBody {
  * Provides functionality to check availability at retail locations, manage tracked GPUs,
  * and add new GPU models to the tracking system. */
 @Controller('gpus')
-export class GpuTrackerController {
-  private readonly logger: Logger = new Logger(GpuTrackerController.name);
+export class GpuScraperController {
+  private readonly logger: Logger = new Logger(GpuScraperController.name);
 
   constructor(
     private readonly gpuService: GpuStockCheckerService,
-    private readonly directApiGpuService: DirectApiGpuService
+    private readonly directApiGpuService: LoadAllGpuService
   ) {}
 
   /* Retrieves real-time GPU stock availability across all retail locations.

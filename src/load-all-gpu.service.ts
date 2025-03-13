@@ -9,8 +9,8 @@ interface GPUProduct {
 }
 
 @Injectable()
-export class DirectApiGpuService {
-  private readonly logger: Logger = new Logger(DirectApiGpuService.name);
+export class LoadAllGpuService {
+  private readonly logger: Logger = new Logger(LoadAllGpuService.name);
   private baseUrl: string = 'https://www.canadacomputers.com/en';
 
   constructor(
