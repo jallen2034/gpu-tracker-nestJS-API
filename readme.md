@@ -67,7 +67,7 @@ The collection includes the following endpoints:
   **Request body:**
   ```json
    {
-     "targetURL": "https://www.canadacomputers.com/en/powered-by-amd/258168/asrock-radeon-rx-7800-xt-challenger-16gb-oc-rx7800xt-cl-16go.html",
+     "url": "https://www.canadacomputers.com/en/powered-by-amd/258168/asrock-radeon-rx-7800-xt-challenger-16gb-oc-rx7800xt-cl-16go.html",
      "sku": "ASROCK Radeon RX 7800 XT Challenger 16GB OC"
    }
   ```
@@ -78,7 +78,7 @@ The collection includes the following endpoints:
   **Request body:**
   ```json
   {
-    "targetURL": "https://www.canadacomputers.com/en/powered-by-amd/251687/gigabyte-radeon-rx-7600-xt-gaming-oc-16g-gv-r76xtgaming-oc-16gd.html",
+    "url": "https://www.canadacomputers.com/en/powered-by-amd/251687/gigabyte-radeon-rx-7600-xt-gaming-oc-16g-gv-r76xtgaming-oc-16gd.html",
     "sku": "GIGABYTE Radeon RX 7600 XT GAMING OC 16G Graphics Card, 3x WINDFORCE Fans 16GB 128-bit GDDR6, GV-R76XTGAMING OC-16GD Video Card"
   }
   ```
@@ -98,8 +98,6 @@ The collection includes the following endpoints:
     - **Notes:**
         - Higher `maxPages` values will take longer to complete but will find more GPU models.
         - This operation must be performed before checking availability to populate the GPU database when I eventually bring in DuckDB.
-
-**Todo:** Realized after the fact the two payloads here should be standardized to use the same "sku" property. I'll fix that later.
 
 ### Environment Setup
 

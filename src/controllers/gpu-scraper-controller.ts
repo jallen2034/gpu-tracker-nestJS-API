@@ -13,7 +13,7 @@ import {
   StockAvailabilityResponse,
 } from '../services/gpu-stock-checker-service-browser-automation.service';
 import { LoadAllGpusGpuScrapingService } from '../services/load-all-gpus-gpu-scraping.service';
-import { UrlLinksPersistenceService } from '../services/url-links-persistence-service';
+import { TrackedGpu, UrlLinksPersistenceService } from '../services/url-links-persistence-service';
 import {
   GpuResult,
   LoadGPUsWebScrapedService,
@@ -31,7 +31,7 @@ interface AddGpuRequestResponse {
 /* Data Transfer Object for adding a new GPU to the tracking list.
  * Requires both the product URL and a descriptive SKU identifier. */
 interface AddGpuRequestBody {
-  targetURL: string;
+  url: string;
   sku: string;
 }
 
@@ -62,7 +62,7 @@ export class GpuScraperController {
     @Body() requestBody: AddGpuRequestBody,
   ): Promise<GpuResult[]> {
     try {
-      if (!requestBody.targetURL) {
+      if (!requestBody.url) {
         throw new HttpException(
           'Missing required field: targetURL is required',
           HttpStatus.BAD_REQUEST,
@@ -71,7 +71,7 @@ export class GpuScraperController {
 
       // Call your new scraping service here.
       return await this.gpuStockServiceWebScraping.getGPUStockInfo(
-        requestBody.targetURL,
+        requestBody.url,
         requestBody.sku,
       );
     } catch (error) {
@@ -136,7 +136,7 @@ export class GpuScraperController {
   /* Retrieves the current list of all GPU models being tracked by the system.
    * Returns an array containing the SKU identifiers and product URLs. */
   @Get('tracked')
-  getTrackedGpus(): { sku: string; url: string }[] {
+  getTrackedGpus(): TrackedGpu[] {
     try {
       return this.urlLinksPersistenceService.getTrackedGpus();
     } catch (error) {
@@ -155,7 +155,7 @@ export class GpuScraperController {
   addGpu(@Body() addGpuDto: AddGpuRequestBody): AddGpuRequestResponse {
     try {
       // Validate the input.
-      if (!addGpuDto.targetURL || !addGpuDto.sku) {
+      if (!addGpuDto.url || !addGpuDto.sku) {
         throw new HttpException(
           'Missing required fields: targetURL and sku are required',
           HttpStatus.BAD_REQUEST,
@@ -163,7 +163,7 @@ export class GpuScraperController {
       }
 
       this.urlLinksPersistenceService.addGpu(
-        addGpuDto.targetURL,
+        addGpuDto.url,
         addGpuDto.sku,
       );
 
