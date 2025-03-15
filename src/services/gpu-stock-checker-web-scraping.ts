@@ -62,9 +62,9 @@ export class LoadGPUsWebScrapedService {
     return storeInventory;
   }
 
-  async getGPUStockInfo(pageUrl: string, sku: string): Promise<GpuResult[]> {
+  async getGPUStockInfo(url: string, sku: string): Promise<GpuResult[]> {
     try {
-      const html: string = await this.networkRequestService.fetchPage(pageUrl);
+      const html: string = await this.networkRequestService.fetchPage(url);
       return this.parseGpuListingsCheerio(html, sku);
     } catch (error) {
       this.logger.error(

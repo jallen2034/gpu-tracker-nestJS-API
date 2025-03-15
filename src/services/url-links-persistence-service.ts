@@ -11,13 +11,13 @@ export class UrlLinksPersistenceService {
   private readonly logger = new Logger(UrlLinksPersistenceService.name);
 
   // This will be updated by another Scraper/Script dynamically later and injected into this class when needed with Dependency Injection.
-  private urlLinks: any = [];
+  private urlLinks: TrackedGpu[] = [];
 
   getTrackedGpus(): TrackedGpu[] {
     try {
       const trackedGpus = this.urlLinks.map((link: any) => ({
         sku: link.sku,
-        url: link.targetURL,
+        url: link.url,
       }));
       return trackedGpus;
     } catch (error) {
@@ -26,24 +26,24 @@ export class UrlLinksPersistenceService {
     }
   }
 
-  addGpu(targetURL: string, sku: string): void {
+  addGpu(url: string, sku: string): void {
     try {
-      if (!targetURL || !sku) {
+      if (!url || !sku) {
         throw new Error(
           'Missing required fields: targetURL and sku are required',
         );
       }
 
       // Check if GPU already exists to avoid duplicates.
-      const exists = this.urlLinks.some(
-        (gpu) => gpu.targetURL === targetURL || gpu.sku === sku,
+      const exists: boolean = this.urlLinks.some(
+        (gpu: TrackedGpu): boolean => gpu.url === url || gpu.sku === sku,
       );
 
       if (exists) {
         throw new Error('GPU with this SKU or URL already exists');
       }
 
-      this.urlLinks.push({ targetURL, sku });
+      this.urlLinks.push({ url, sku });
       this.logger.log(`Added new GPU to track: ${sku}`);
     } catch (error) {
       this.logger.error(`Error adding GPU: ${error.message}`);

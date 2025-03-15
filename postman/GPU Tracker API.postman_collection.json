@@ -52,7 +52,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": " {\n    \"sku\": \"ASROCK Radeon RX 7800 XT Challenger 16GB OC\",\n    \"targetURL\": \"https://www.canadacomputers.com/en/powered-by-amd/258168/asrock-radeon-rx-7800-xt-challenger-16gb-oc-rx7800xt-cl-16go.html\"\n}",
+					"raw": " {\n    \"sku\": \"ASROCK Radeon RX 7800 XT Challenger 16GB OC\",\n    \"url\": \"https://www.canadacomputers.com/en/powered-by-amd/258168/asrock-radeon-rx-7800-xt-challenger-16gb-oc-rx7800xt-cl-16go.html\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -81,7 +81,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "    {\n      \"targetURL\": \"https://www.canadacomputers.com/en/powered-by-amd/251687/gigabyte-radeon-rx-7600-xt-gaming-oc-16g-gv-r76xtgaming-oc-16gd.html\",\n      \"sku\": \"GIGABYTE Radeon RX 7600 XT GAMING OC 16G Graphics Card, 3x WINDFORCE Fans 16GB 128-bit GDDR6, GV-R76XTGAMING OC-16GD Video Card\"\n    }",
+					"raw": "    {\n      \"url\": \"https://www.canadacomputers.com/en/powered-by-amd/251687/gigabyte-radeon-rx-7600-xt-gaming-oc-16g-gv-r76xtgaming-oc-16gd.html\",\n      \"sku\": \"GIGABYTE Radeon RX 7600 XT GAMING OC 16G Graphics Card, 3x WINDFORCE Fans 16GB 128-bit GDDR6, GV-R76XTGAMING OC-16GD Video Card\"\n    }",
 					"options": {
 						"raw": {
 							"language": "json"
