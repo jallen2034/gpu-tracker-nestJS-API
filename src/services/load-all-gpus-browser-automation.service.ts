@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
 import { CheerioAPI } from "cheerio";
 import { GpuStockCheckerService } from "./gpu-stock-checker.service";
+import { UrlLinksPersistenceService } from "./url-links-persistence-service";
 
 interface GPUProduct {
   name: string;
@@ -9,12 +10,13 @@ interface GPUProduct {
 }
 
 @Injectable()
-export class LoadAllGpuService {
-  private readonly logger: Logger = new Logger(LoadAllGpuService.name);
+export class LoadAllGpusBrowserAutomationService {
+  private readonly logger: Logger = new Logger(LoadAllGpusBrowserAutomationService.name);
   private baseUrl: string = 'https://www.canadacomputers.com/en';
 
   constructor(
     private readonly gpuStockTrackerService: GpuStockCheckerService,
+    private readonly urlLinksPersistenceService: UrlLinksPersistenceService
   ) {}
 
   // Fetches a single page of GPU listings from Canada Computers using the provided page number.
@@ -107,7 +109,7 @@ export class LoadAllGpuService {
       // Register each product with the GPU stock tracker service for monitoring.
       for (let product of allProducts) {
         const { name, url } = product
-        this.gpuStockTrackerService.addGpu(url, name);
+        this.urlLinksPersistenceService.addGpu(url, name);
       }
     } catch (error) {
       this.logger.error(`Error with getting the entire list of GPUs from Canada computers: ${error}`);

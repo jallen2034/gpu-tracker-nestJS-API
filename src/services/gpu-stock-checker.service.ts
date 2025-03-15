@@ -20,6 +20,8 @@ export interface StockAvailabilityResponse {
   [provinceName: string]: LocationMap;
 }
 
+/* Old GPU Stock Checker Service that uses browser Automation to scrape for GPU availability. This is pretty slow
+ * though and I'll be working on a faster service to do the same job as this but with Web Scraping instead. */
 @Injectable()
 export class GpuStockCheckerService {
   private readonly logger = new Logger(GpuStockCheckerService.name);
@@ -217,41 +219,5 @@ export class GpuStockCheckerService {
     }
 
     return this.displayResults(availableItems);
-  }
-
-  getTrackedGpus(): { sku: string; url: string }[] {
-    try {
-      const trackedGpus = this.urlLinks.map((link: any) => ({
-        sku: link.sku,
-        url: link.targetURL
-      }));
-      return trackedGpus
-    } catch (error) {
-      this.logger.error(`Error getting tracked GPUs: ${error.message}`);
-      throw error;
-    }
-  }
-
-  addGpu(targetURL: string, sku: string): void {
-    try {
-      if (!targetURL || !sku) {
-        throw new Error('Missing required fields: targetURL and sku are required');
-      }
-
-      // Check if GPU already exists to avoid duplicates.
-      const exists = this.urlLinks.some(gpu =>
-        gpu.targetURL === targetURL || gpu.sku === sku
-      );
-
-      if (exists) {
-        throw new Error('GPU with this SKU or URL already exists');
-      }
-
-      this.urlLinks.push({ targetURL, sku });
-      this.logger.log(`Added new GPU to track: ${sku}`);
-    } catch (error) {
-      this.logger.error(`Error adding GPU: ${error.message}`);
-      throw error;
-    }
   }
 }

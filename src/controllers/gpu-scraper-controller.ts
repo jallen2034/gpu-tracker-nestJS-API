@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Logger, Post, Query } from '@nestjs/common';
-import { GpuStockCheckerService, StockAvailabilityResponse } from "./gpu-stock-checker.service";
-import { LoadAllGpuService } from "./load-all-gpu.service";
+import { GpuStockCheckerService, StockAvailabilityResponse } from "../services/gpu-stock-checker.service";
+import { LoadAllGpusBrowserAutomationService } from "../services/load-all-gpus-browser-automation.service";
+import { UrlLinksPersistenceService } from "../services/url-links-persistence-service";
 
 interface AddGpuRequestResponse { message: string; sku: string; }
 
@@ -20,8 +21,21 @@ export class GpuScraperController {
 
   constructor(
     private readonly gpuService: GpuStockCheckerService,
-    private readonly directApiGpuService: LoadAllGpuService
+    private readonly directApiGpuService: LoadAllGpusBrowserAutomationService,
+    private readonly urlLinksPersistenceService: UrlLinksPersistenceService
   ) {}
+
+  @Get('scraped')
+  async getAvailabilityOptimized(): Promise<any> {
+    try {
+
+    } catch (error) {
+      throw new HttpException(
+        'Failed to fetch GPU availability',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
   /* Retrieves real-time GPU stock availability across all retail locations.
    * Executes a web scraping operation against Canada Computers for all tracked GPUs.
@@ -66,7 +80,7 @@ export class GpuScraperController {
   @Get('tracked')
   getTrackedGpus(): { sku: string; url: string; }[] {
     try {
-      return this.gpuService.getTrackedGpus();
+      return this.urlLinksPersistenceService.getTrackedGpus();
     } catch (error) {
       this.logger.error(`Failed to get tracked GPUs: ${error.message}`);
       throw new HttpException(
@@ -90,7 +104,7 @@ export class GpuScraperController {
         );
       }
 
-      this.gpuService.addGpu(addGpuDto.targetURL, addGpuDto.sku);
+      this.urlLinksPersistenceService.addGpu(addGpuDto.targetURL, addGpuDto.sku);
 
       const responseBody: AddGpuRequestResponse = { message: 'GPU added successfully', sku: addGpuDto.sku }
       return responseBody;
