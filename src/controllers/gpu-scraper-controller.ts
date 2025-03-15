@@ -13,15 +13,15 @@ import {
   StockAvailabilityResponse,
 } from '../services/gpu-stock-checker-service-browser-automation.service';
 import { LoadAllGpusGpuScrapingService } from '../services/load-all-gpus-gpu-scraping.service';
-import { TrackedGpu, UrlLinksPersistenceService } from '../services/url-links-persistence-service';
+import { TrackedGpu, UrlLinksPersistenceService } from '../services/url-links-persistence.service';
 import {
   GpuResult,
   LoadGPUsWebScrapedService,
-} from '../services/gpu-stock-checker-web-scraping';
+} from '../services/gpu-stock-checker-web-scraping.service';
 import {
   LoadAllGPUsWebScrapedService,
   ScrapedStockAvailabilityResponse,
-} from '../services/gpu-stock-checker-all-web-scraping';
+} from '../services/gpu-stock-checker-all-web-scraping.service';
 
 interface AddGpuRequestResponse {
   message: string;

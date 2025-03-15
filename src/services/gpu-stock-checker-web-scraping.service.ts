@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
 import { CheerioAPI } from 'cheerio';
-import { NetworkRequestService } from './network-request-service';
+import { NetworkRequestService } from './network-request.service';
 
 export interface GpuResult {
   location: string;

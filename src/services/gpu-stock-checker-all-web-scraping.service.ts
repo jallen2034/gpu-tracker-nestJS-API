@@ -2,12 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   GpuResult,
   LoadGPUsWebScrapedService,
-} from './gpu-stock-checker-web-scraping';
+} from './gpu-stock-checker-web-scraping.service';
 import {
   TrackedGpu,
   UrlLinksPersistenceService,
-} from './url-links-persistence-service';
-import { NetworkRequestService } from './network-request-service';
+} from './url-links-persistence.service';
+import { NetworkRequestService } from './network-request.service';
 
 interface ScrapedResultMap {
   [skuName: string]: GpuResult;

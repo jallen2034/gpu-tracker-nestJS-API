@@ -3,7 +3,7 @@ import { Browser, chromium, ElementHandle, Page } from 'playwright';
 import {
   TrackedGpu,
   UrlLinksPersistenceService,
-} from './url-links-persistence-service';
+} from './url-links-persistence.service';
 
 interface Result {
   sku: string;
