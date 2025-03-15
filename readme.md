@@ -44,6 +44,8 @@ This architecture enables:
 
 This repository includes a Postman collection for easy API testing.
 
+![image](https://github.com/user-attachments/assets/baec16bd-d82b-4950-967e-21175a39902b)
+
 ### Importing the Collection
 
 1. Download the Postman collection file from:
