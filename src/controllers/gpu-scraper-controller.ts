@@ -1,15 +1,43 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Logger, Post, Query } from '@nestjs/common';
-import { GpuStockCheckerService, StockAvailabilityResponse } from "../services/gpu-stock-checker.service";
-import { LoadAllGpusBrowserAutomationService } from "../services/load-all-gpus-browser-automation.service";
-import { UrlLinksPersistenceService } from "../services/url-links-persistence-service";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Logger,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  GpuStockCheckerServiceBrowserAutomation,
+  StockAvailabilityResponse,
+} from '../services/gpu-stock-checker-service-browser-automation.service';
+import { LoadAllGpusGpuScrapingService } from '../services/load-all-gpus-gpu-scraping.service';
+import { UrlLinksPersistenceService } from '../services/url-links-persistence-service';
+import {
+  GpuResult,
+  LoadGPUsWebScrapedService,
+} from '../services/gpu-stock-checker-web-scraping';
+import {
+  LoadAllGPUsWebScrapedService,
+  ScrapedStockAvailabilityResponse,
+} from '../services/gpu-stock-checker-all-web-scraping';
 
-interface AddGpuRequestResponse { message: string; sku: string; }
+interface AddGpuRequestResponse {
+  message: string;
+  sku: string;
+}
 
 /* Data Transfer Object for adding a new GPU to the tracking list.
  * Requires both the product URL and a descriptive SKU identifier. */
 interface AddGpuRequestBody {
   targetURL: string;
   sku: string;
+}
+
+export interface LoadGPUListResponse {
+  message: string;
+  pagesScanned: number;
 }
 
 /* Controller handling GPU stock tracking and availability endpoints.
@@ -20,18 +48,48 @@ export class GpuScraperController {
   private readonly logger: Logger = new Logger(GpuScraperController.name);
 
   constructor(
-    private readonly gpuService: GpuStockCheckerService,
-    private readonly directApiGpuService: LoadAllGpusBrowserAutomationService,
-    private readonly urlLinksPersistenceService: UrlLinksPersistenceService
+    private readonly gpuStockServiceBrowserAutomation: GpuStockCheckerServiceBrowserAutomation,
+    private readonly directApiGpuService: LoadAllGpusGpuScrapingService,
+    private readonly urlLinksPersistenceService: UrlLinksPersistenceService,
+    private readonly gpuStockServiceWebScraping: LoadGPUsWebScrapedService,
+    private readonly gpuAllStockServiceWebScraping: LoadAllGPUsWebScrapedService,
   ) {}
 
-  @Get('scraped')
-  async getAvailabilityOptimized(): Promise<any> {
+  /* Retrieves GPU stock availability using optimized web scraping
+   * rather than browser automation for faster results. */
+  @Post('scraped')
+  async getAvailabilityOptimized(
+    @Body() requestBody: AddGpuRequestBody,
+  ): Promise<GpuResult[]> {
     try {
+      if (!requestBody.targetURL) {
+        throw new HttpException(
+          'Missing required field: targetURL is required',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
 
+      // Call your new scraping service here.
+      return await this.gpuStockServiceWebScraping.getGPUStockInfo(
+        requestBody.targetURL,
+        requestBody.sku,
+      );
     } catch (error) {
+      this.logger.error(`Failed to fetch GPU availability: ${error.message}`);
       throw new HttpException(
         'Failed to fetch GPU availability',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('scraped')
+  async getAvailabilityScraped(): Promise<ScrapedStockAvailabilityResponse> {
+    try {
+      return this.gpuAllStockServiceWebScraping.getAllGpuAvailability();
+    } catch (error) {
+      throw new HttpException(
+        'Failed to fetch all GPU availability',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -43,7 +101,7 @@ export class GpuScraperController {
   @Get()
   async getAvailability(): Promise<StockAvailabilityResponse> {
     try {
-      return await this.gpuService.getGpuAvailability();
+      return await this.gpuStockServiceBrowserAutomation.getGpuAvailability();
     } catch (error) {
       throw new HttpException(
         'Failed to fetch GPU availability',
@@ -52,19 +110,19 @@ export class GpuScraperController {
     }
   }
 
-  // Gets a list of all the potential GPU's that Canada Computers has by scraping theri site.
+  // Loads in all GPU's scraped from Canada Computers into our apps memory.
   @Get('all')
-  async getEntireGPUListCanadaComputers(
-    @Query('maxPages') maxPages: string = '5'
-  ): Promise<any> {
+  async loadEntireGPUListCanadaComputersIntoApp(
+    @Query('maxPages') maxPages: string = '5',
+  ): Promise<LoadGPUListResponse> {
     try {
-      // Convert string to number and ensure it's valid
+      // Convert string to number and ensure it's valid.
       const maxPagesNum: number = parseInt(maxPages, 10) || 5;
-
       await this.directApiGpuService.getAllGpus(maxPagesNum);
+
       return {
         message: 'GPUs were loaded into the app successfully',
-        pagesScanned: maxPagesNum
+        pagesScanned: maxPagesNum,
       };
     } catch (error) {
       this.logger.error(`Failed to get GPU list: ${error.message}`);
@@ -78,7 +136,7 @@ export class GpuScraperController {
   /* Retrieves the current list of all GPU models being tracked by the system.
    * Returns an array containing the SKU identifiers and product URLs. */
   @Get('tracked')
-  getTrackedGpus(): { sku: string; url: string; }[] {
+  getTrackedGpus(): { sku: string; url: string }[] {
     try {
       return this.urlLinksPersistenceService.getTrackedGpus();
     } catch (error) {
@@ -100,26 +158,26 @@ export class GpuScraperController {
       if (!addGpuDto.targetURL || !addGpuDto.sku) {
         throw new HttpException(
           'Missing required fields: targetURL and sku are required',
-          HttpStatus.BAD_REQUEST
+          HttpStatus.BAD_REQUEST,
         );
       }
 
-      this.urlLinksPersistenceService.addGpu(addGpuDto.targetURL, addGpuDto.sku);
+      this.urlLinksPersistenceService.addGpu(
+        addGpuDto.targetURL,
+        addGpuDto.sku,
+      );
 
-      const responseBody: AddGpuRequestResponse = { message: 'GPU added successfully', sku: addGpuDto.sku }
+      const responseBody: AddGpuRequestResponse = {
+        message: 'GPU added successfully',
+        sku: addGpuDto.sku,
+      };
       return responseBody;
     } catch (error) {
       // Check for specific error types to return appropriate status codes.
       if (error.message.includes('already exists')) {
-        throw new HttpException(
-          error.message,
-          HttpStatus.CONFLICT
-        );
+        throw new HttpException(error.message, HttpStatus.CONFLICT);
       } else if (error.message.includes('Missing required fields')) {
-        throw new HttpException(
-          error.message,
-          HttpStatus.BAD_REQUEST
-        );
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
           `Failed to add GPU: ${error.message}`,

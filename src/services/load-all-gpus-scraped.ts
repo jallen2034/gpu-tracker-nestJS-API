@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { LoadAllGpusBrowserAutomationService } from "./load-all-gpus-browser-automation.service";
+import { LoadAllGpusGpuScrapingService } from "./load-all-gpus-gpu-scraping.service";
 
 @Injectable()
 export class LoadAllGpusScrapedAutomationService {
