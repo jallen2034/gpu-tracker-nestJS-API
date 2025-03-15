@@ -13,11 +13,96 @@ A NestJS API service that tracks and monitors GPU stock availability across Cana
 https://github.com/user-attachments/assets/9f1481a7-b516-4b86-9a34-4e6c8e63bb19
 
 ## Architecture
-The project has been migrated from a standalone script to a full NestJS API service:
+The project follows a modular NestJS architecture with clean separation of concerns:
 
-- **Controller Layer**: Handles HTTP requests and route management from the client.
-- **Service Layer**: Contains business logic and scraping functionality with Playwright.
-- **Error Handling:** Proper HTTP status codes and error messages.
+* **Controller Layer**: Handles HTTP requests and route management from the client.
+* **Service Layer**: Contains business logic with specialized services:
+    * Browser automation service (using Playwright).
+    * Web scraping service (using Cheerio for faster performance).
+    * Network request service (handles all HTTP communications).
+* **Persistence Layer**: Manages stored GPU data through dependency injection. Will eventually interface with DuckDB and a model/data persistence layer soon.
+* **Module Structure**: Organizes related components into cohesive feature modules.
+* **Dependency Injection**: Promotes code reuse and testability through an IoC pattern.
+* **Error Handling**: Proper HTTP status codes and detailed error messages.
+* **Logging**: Comprehensive logging across all services for debuggability.
+
+### Key Services
+
+1. **NetworkRequestService**: Centralizes all HTTP requests with proper headers and rate limiting.
+2. **UrlLinksPersistenceService**: Manages the in-memory storage of tracked GPUs.
+3. **LoadGPUsWebScrapedService**: Handles individual GPU scraping using Cheerio.
+4. **LoadAllGPUsWebScrapedService**: Coordinates batch scraping of all tracked GPUs.
+5. **GpuStockCheckerServiceBrowserAutomation**: Legacy service using Playwright for complex interactions.
+
+This architecture enables:
+* **Code Reuse**: Common functionality extracted into specialized services
+* **Performance Optimization**: Faster scraping through Cheerio instead of browser automation
+* **Maintainability**: Single responsibility principle applied to all components
+* **Scalability**: Easy to add new features or data sources
+
+## API Testing with Postman
+
+This repository includes a Postman collection for easy API testing.
+
+### Importing the Collection
+
+1. Download the Postman collection file from:
+   `./postman/Canada-Computers-GPU-Checker.postman_collection.json`
+2. Open Postman.
+3. Click "Import" button in the top left corner.
+4. Drag and drop the downloaded JSON file or browse to select it.
+5. The collection will be imported with all pre-configured requests.
+
+### Available Requests
+
+The collection includes the following endpoints:
+
+- **GET `/gpus`** - Get real-time availability for all tracked GPUs using browser automation with Playwright (slow).
+- **GET `/gpus/scraped`** - Get availability for all tracked GPUs using optimized web scraping (fast + optimized).
+- **POST `/gpus/scraped`** - Check availability for a specific individual GPU using optimized web scraping (fast + optimized).
+
+  
+  **Request body:**
+  ```json
+   {
+     "targetURL": "https://www.canadacomputers.com/en/powered-by-amd/258168/asrock-radeon-rx-7800-xt-challenger-16gb-oc-rx7800xt-cl-16go.html",
+     "sku": "ASROCK Radeon RX 7800 XT Challenger 16GB OC"
+   }
+  ```
+
+- **POST `/gpus`** - Add a new single GPU to be tracked by the application.
+
+
+  **Request body:**
+  ```json
+  {
+    "targetURL": "https://www.canadacomputers.com/en/powered-by-amd/251687/gigabyte-radeon-rx-7600-xt-gaming-oc-16g-gv-r76xtgaming-oc-16gd.html",
+    "sku": "GIGABYTE Radeon RX 7600 XT GAMING OC 16G Graphics Card, 3x WINDFORCE Fans 16GB 128-bit GDDR6, GV-R76XTGAMING OC-16GD Video Card"
+  }
+  ```
+
+- **POST `/gpus/tracked`** - Retrieve a list of all the tracked GPU's by the application.
+- **GET `/gpus/all`** - Scrapes and loads all available GPUs from Canada Computers website into the application's memory
+    - **Query Parameters:**
+        - `maxPages` (optional): Number of catalog pages to scrape (default: 5).
+        - Example: `/gpus/all?maxPages=1` (scrapes only the first page of GPU listings).
+    - **Response:**
+      ```json
+      {
+        "message": "GPUs were loaded into the app successfully",
+        "pagesScanned": 1
+      }
+      ```
+    - **Notes:**
+        - Higher `maxPages` values will take longer to complete but will find more GPU models.
+        - This operation must be performed before checking availability to populate the GPU database when I eventually bring in DuckDB.
+
+**Todo:** Realized after the fact the two payloads here should be standardized to use the same "sku" property. I'll fix that later.
+
+### Environment Setup
+
+For local testing, create an environment in Postman with the variable:
+- `baseUrl`: `http://localhost:3000`
 
 ## API Endpoints
 

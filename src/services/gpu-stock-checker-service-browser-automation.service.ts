@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Browser, chromium, ElementHandle, Page } from 'playwright';
+import {
+  TrackedGpu,
+  UrlLinksPersistenceService,
+} from './url-links-persistence-service';
 
 interface Result {
   sku: string;
@@ -20,12 +24,17 @@ export interface StockAvailabilityResponse {
   [provinceName: string]: LocationMap;
 }
 
+/* Old GPU Stock Checker Service that uses browser Automation to scrape for GPU availability. This is pretty slow
+ * though and I'll be working on a faster service to do the same job as this but with Web Scraping instead. */
 @Injectable()
-export class GpuStockCheckerService {
-  private readonly logger = new Logger(GpuStockCheckerService.name);
+export class GpuStockCheckerServiceBrowserAutomation {
+  private readonly logger: Logger = new Logger(
+    GpuStockCheckerServiceBrowserAutomation.name,
+  );
 
-  // This will be updated by another Scraper/Script dynamically later and injected into this class when needed with Dependency Injection.
-  private urlLinks: any = [];
+  constructor(
+    private readonly urlLinksPersistenceService: UrlLinksPersistenceService,
+  ) {}
 
   private isSoldOut(innerHtml: string): boolean {
     return innerHtml.toLowerCase().includes('sold out');
@@ -39,19 +48,20 @@ export class GpuStockCheckerService {
       await page.waitForSelector('.modal-body', { state: 'attached' });
 
       // Get all province sections..
-      const provinceSections: ElementHandle<SVGElement | HTMLElement>[] = await page.$$('.card');
+      const provinceSections: ElementHandle<SVGElement | HTMLElement>[] =
+        await page.$$('.card');
 
       for (const section of provinceSections) {
         // Get the province name.
-        const provinceNameElement
-          = await section.$('.btn-block');
+        const provinceNameElement = await section.$('.btn-block');
         if (!provinceNameElement) continue;
 
         const provinceText: string = await provinceNameElement.innerText();
         const province: string = provinceText.trim();
 
         // Find all store rows within this province section.
-        const storeRows: ElementHandle<SVGElement | HTMLElement>[] = await section.$$('.row.mx-0.align-items-center');
+        const storeRows: ElementHandle<SVGElement | HTMLElement>[] =
+          await section.$$('.row.mx-0.align-items-center');
 
         for (const row of storeRows) {
           // Get the store name.
@@ -64,7 +74,9 @@ export class GpuStockCheckerService {
           const quantityElement = await row.$('.shop-online-box');
           if (!quantityElement) continue;
 
-          const quantityText: string = (await quantityElement.innerText()).trim();
+          const quantityText: string = (
+            await quantityElement.innerText()
+          ).trim();
           const quantity: number = parseInt(quantityText, 10);
 
           // Only include stores with stock > 0
@@ -73,7 +85,7 @@ export class GpuStockCheckerService {
               sku,
               province,
               location,
-              quantity
+              quantity,
             });
           }
         }
@@ -89,7 +101,8 @@ export class GpuStockCheckerService {
 
   private async expandItemTotalDialogue(page: Page): Promise<any[]> {
     const buttonSelector: string = 'button[data-toggle="collapse"]'; // Selector for the buttons
-    const plusIconSelector: string = 'i.fa-regular.collapse-icon.f-20.position-absolute.right-2.fa-plus'; // The selector for the plus icons
+    const plusIconSelector: string =
+      'i.fa-regular.collapse-icon.f-20.position-absolute.right-2.fa-plus'; // The selector for the plus icons
     const results: any[] = [];
 
     try {
@@ -97,7 +110,8 @@ export class GpuStockCheckerService {
       await page.waitForSelector(buttonSelector, { state: 'attached' });
 
       // Select all the buttons that toggle the collapses
-      const buttons: ElementHandle<SVGElement | HTMLElement>[] = await page.$$(buttonSelector);
+      const buttons: ElementHandle<SVGElement | HTMLElement>[] =
+        await page.$$(buttonSelector);
 
       if (buttons.length > 0) {
         // Click on each button sequentially to expand the sections.
@@ -124,16 +138,16 @@ export class GpuStockCheckerService {
   }
 
   private displayResults(allResults: Result[][]): StockAvailabilityResponse {
-    const hasResults: boolean = allResults.some((
-      resultArr: Result[]): boolean => resultArr.length > 0
+    const hasResults: boolean = allResults.some(
+      (resultArr: Result[]): boolean => resultArr.length > 0,
     );
 
     if (!hasResults) {
-      this.logger.log("No stock available :( tough luck iuri");
+      this.logger.log('No stock available :( tough luck iuri');
       return {} as StockAvailabilityResponse;
     }
 
-    const finalResult: StockAvailabilityResponse = {}
+    const finalResult: StockAvailabilityResponse = {};
 
     // Build unique list of provinces GPU's were found at.
     allResults.forEach((results: Result[]) => {
@@ -150,19 +164,25 @@ export class GpuStockCheckerService {
 
         // Add the current GPU by SKU to avoid overwriting.
         finalResult[result.province][result.location][result.sku] = result;
-      })
-    })
+      });
+    });
 
-    return finalResult
+    return finalResult;
   }
 
-  private async checkGpuAvailability(page: Page, targetUrl: string, sku: string): Promise<Result[]> {
+  private async checkGpuAvailability(
+    page: Page,
+    targetUrl: string,
+    sku: string,
+  ): Promise<Result[]> {
     try {
       // Navigate to the product page
       await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
 
       // Check if the product info element exists.
-      const innerPElement = await page.$('#storeinfo > div > div > p:nth-child(3)');
+      const innerPElement = await page.$(
+        '#storeinfo > div > div > p:nth-child(3)',
+      );
 
       if (!innerPElement) {
         return [];
@@ -177,7 +197,9 @@ export class GpuStockCheckerService {
       }
 
       // Look for the "Check Other Stores" button.
-      const checkOtherStoresElement = await page.$('a[data-target="#checkothertores"] span.link-active');
+      const checkOtherStoresElement = await page.$(
+        'a[data-target="#checkothertores"] span.link-active',
+      );
 
       if (!checkOtherStoresElement) {
         return [];
@@ -200,58 +222,28 @@ export class GpuStockCheckerService {
     const availableItems: Result[][] = [];
     const browser: Browser = await chromium.launch({ headless: false });
     const page: Page = await browser.newPage();
+    const trackedUrls: TrackedGpu[] =
+      this.urlLinksPersistenceService.getTrackedGpus();
 
     try {
-      for (const url of this.urlLinks) {
-        const results: Result[] = await this.checkGpuAvailability(page, url.targetURL, url.sku);
+      for (const trackedUrl of trackedUrls) {
+        const results: Result[] = await this.checkGpuAvailability(
+          page,
+          trackedUrl.url,
+          trackedUrl.sku,
+        );
 
         if (results.length > 0) {
           availableItems.push(results);
         }
       }
     } catch (error) {
-      console.error("Unexpected error in getGpuAvailability(): ", error);
+      console.error('Unexpected error in getGpuAvailability(): ', error);
       throw error;
     } finally {
       await browser.close();
     }
 
     return this.displayResults(availableItems);
-  }
-
-  getTrackedGpus(): { sku: string; url: string }[] {
-    try {
-      const trackedGpus = this.urlLinks.map((link: any) => ({
-        sku: link.sku,
-        url: link.targetURL
-      }));
-      return trackedGpus
-    } catch (error) {
-      this.logger.error(`Error getting tracked GPUs: ${error.message}`);
-      throw error;
-    }
-  }
-
-  addGpu(targetURL: string, sku: string): void {
-    try {
-      if (!targetURL || !sku) {
-        throw new Error('Missing required fields: targetURL and sku are required');
-      }
-
-      // Check if GPU already exists to avoid duplicates.
-      const exists = this.urlLinks.some(gpu =>
-        gpu.targetURL === targetURL || gpu.sku === sku
-      );
-
-      if (exists) {
-        throw new Error('GPU with this SKU or URL already exists');
-      }
-
-      this.urlLinks.push({ targetURL, sku });
-      this.logger.log(`Added new GPU to track: ${sku}`);
-    } catch (error) {
-      this.logger.error(`Error adding GPU: ${error.message}`);
-      throw error;
-    }
   }
 }

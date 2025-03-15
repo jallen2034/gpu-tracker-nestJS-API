@@ -1,0 +1,152 @@
+{
+	"info": {
+		"_postman_id": "59079ab1-5d54-4304-8ab9-ae94d25e583f",
+		"name": "GPU Tracker API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39722222"
+	},
+	"item": [
+		{
+			"name": "Get GPU Availability with Browser Automation (Slow)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/gpus",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"gpus"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get GPU Availability with Web Scraping (Fast)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/gpus/scraped",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"gpus",
+						"scraped"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get GPU Availability Web Scraping (Fast)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\n    \"sku\": \"ASROCK Radeon RX 7800 XT Challenger 16GB OC\",\n    \"targetURL\": \"https://www.canadacomputers.com/en/powered-by-amd/258168/asrock-radeon-rx-7800-xt-challenger-16gb-oc-rx7800xt-cl-16go.html\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/gpus/scraped",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"gpus",
+						"scraped"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add a specific GPU to Track in the App",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "    {\n      \"targetURL\": \"https://www.canadacomputers.com/en/powered-by-amd/251687/gigabyte-radeon-rx-7600-xt-gaming-oc-16g-gv-r76xtgaming-oc-16gd.html\",\n      \"sku\": \"GIGABYTE Radeon RX 7600 XT GAMING OC 16G Graphics Card, 3x WINDFORCE Fans 16GB 128-bit GDDR6, GV-R76XTGAMING OC-16GD Video Card\"\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/gpus",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"gpus"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Tracked GPUs in the App",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/gpus/tracked",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"gpus",
+						"tracked"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Load All GPUs in the App",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/gpus/all?maxPages=1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"gpus",
+						"all"
+					],
+					"query": [
+						{
+							"key": "maxPages",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
