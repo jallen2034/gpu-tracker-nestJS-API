@@ -147,6 +147,26 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "GPU DB Connection Test",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/database/test",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"database",
+						"test"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
