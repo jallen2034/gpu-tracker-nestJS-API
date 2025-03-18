@@ -35,23 +35,14 @@ CREATE TABLE gpu_availability (
     UNIQUE (gpu_id, province, location)
 );
 
--- Create user_tracked_gpus table (junction table).
-CREATE TABLE user_tracked_gpus (
+CREATE TABLE user_gpu_relationships (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     gpu_id INTEGER REFERENCES gpus(id) ON DELETE CASCADE,
+    is_tracking BOOLEAN DEFAULT TRUE,
+    price_threshold DECIMAL(10, 2) NULL,
+    notification_enabled BOOLEAN DEFAULT FALSE,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_id, gpu_id)
-);
-
--- Create user_gpu_watchlists table.
-CREATE TABLE user_gpu_watchlists (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    gpu_id INTEGER REFERENCES gpus(id) ON DELETE CASCADE,
-    price_threshold DECIMAL(10, 2),
-    notification_enabled BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, gpu_id)
 );
 
