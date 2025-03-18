@@ -230,6 +230,84 @@ HEADLESS_MODE=true
 CHECK_INTERVAL=300000
 ```
 
+Here's a section you can add to your README.md that explains how to set up and run the Docker container for the PostgreSQL database:
+markdownCopy## Database Setup with Docker
+
+This project uses PostgreSQL in a Docker container for data persistence. Follow these steps to set up the database:
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed on your machine
+- Basic familiarity with Docker and container concepts
+
+### Setting Up the PostgreSQL
+
+![Database Entity-Relationship Diagram](./src/database/ERD.png)
+
+1. **Install Docker Desktop**
+    - Download and install Docker Desktop from [docker.com](https://www.docker.com/products/docker-desktop/).
+    - Start Docker Desktop and ensure it's running before proceeding.
+   
+
+2. **Start the PostgreSQL Container**
+    - Navigate to the project root directory.
+    - Run the following command to start the container:
+      ```bash
+      docker-compose up -d
+      ```
+    - The `-d` flag runs the container in detached mode (background)
+    - The database schema (tables, relationships, and indexes) is automatically created during the first container initialization from the SQL script located at: `src/database/schemas/001_initial_schema.sql`
+
+
+3. **Verify Database Setup**
+    - Check that the container is running:
+      ```bash
+      docker ps
+      ```
+    - You should see a container named `postgres_db` in the list
+
+
+4. **Connect to the Database**
+    - The PostgreSQL database is accessible on port 5433
+    - Connection details:
+        - Host: localhost
+        - Port: 5433
+        - Database: gpu_tracker
+        - Username: postgres
+        - Password: postgres
+
+
+5. **Database Management Tools**
+    - You can use [DBeaver](https://dbeaver.io/) or any PostgreSQL client with a GUI to connect to and manage the database.
+    - The database schema is automatically created when the container first starts.
+
+
+6. **Stopping the Container**
+    - When you're done, you can stop the container:
+      ```bash
+      docker-compose down
+      ```
+    - To completely remove the database and start fresh:
+      ```bash
+      docker-compose down -v
+      ```
+      Note: This will delete all data in the database
+
+### To view database logs:
+
+```bash
+docker logs postgres_db
+```
+
+### Troubleshooting
+
+- If the database tables aren't appearing, you may need to reinitialize the database:
+
+```bash
+docker-compose down -v
+docker-compose up -d
+```
+
 ## Future Development
 
 While this roadmap is ambitious and comprehensive, even implementing a third of these features would provide significant learning opportunities for me. The journey of building these components will involve exploring new technologies, solving interesting problems, and creating something genuinely useful for GPU nerds like myself.

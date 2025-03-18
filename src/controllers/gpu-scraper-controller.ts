@@ -55,6 +55,8 @@ export class GpuScraperController {
     private readonly gpuAllStockServiceWebScraping: LoadAllGPUsWebScrapedService,
   ) {}
 
+
+
   /* Retrieves GPU stock availability using optimized web scraping
    * rather than browser automation for faster results. */
   @Post('scraped')
@@ -88,6 +90,7 @@ export class GpuScraperController {
     try {
       return this.gpuAllStockServiceWebScraping.getAllGpuAvailability();
     } catch (error) {
+      this.logger.error(`Failed to fetch all GPU availability: ${error.message}`);
       throw new HttpException(
         'Failed to fetch all GPU availability',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -103,6 +106,7 @@ export class GpuScraperController {
     try {
       return await this.gpuStockServiceBrowserAutomation.getGpuAvailability();
     } catch (error) {
+      this.logger.error(`Failed to fetch GPU availability: ${error.message}`);
       throw new HttpException(
         'Failed to fetch GPU availability',
         HttpStatus.INTERNAL_SERVER_ERROR,
