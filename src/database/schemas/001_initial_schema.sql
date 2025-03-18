@@ -49,7 +49,6 @@ CREATE TABLE user_gpu_relationships (
 -- Create scrape_jobs table.
 CREATE TABLE scrape_jobs (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     status VARCHAR(50) NOT NULL,
     started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP,
