@@ -293,7 +293,8 @@ This project uses PostgreSQL in a Docker container for data persistence. Follow 
       ```
       Note: This will delete all data in the database
 
-#### To view database logs:
+### To view database logs:
+
 ```bash
 docker logs postgres_db
 ```
@@ -301,9 +302,11 @@ docker logs postgres_db
 ### Troubleshooting
 
 - If the database tables aren't appearing, you may need to reinitialize the database:
-  ```bash
-  docker-compose down -v
-  docker-compose up -d
+
+```bash
+docker-compose down -v
+docker-compose up -d
+```
 
 ## Future Development
 
