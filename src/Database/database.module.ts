@@ -2,6 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseService } from './dbService';
 import { DatabaseController } from './dbController';
+import { GpusEntity } from '../Entities/gpus-entity';
+import { GpuAvailabilityEntity } from '../Entities/gpu-avaliability-entity';
+import { UsersEntity } from '../Entities/users-entity';
+import { UserGpuRelationshipEntity } from '../Entities/user-gpu-relationship-entity';
+import { ScrapeJobEntity } from '../Entities/scrape-job-entity';
+import { GpuRepository } from '../Repositories/gpus-repository';
 
 const dbConfigObj: any = {
   type: 'postgres',
@@ -10,7 +16,7 @@ const dbConfigObj: any = {
   username: 'postgres',
   password: 'postgres',
   database: 'gpu_tracker',
-  entities: [],
+  entities: [GpusEntity, GpuAvailabilityEntity, UsersEntity, UserGpuRelationshipEntity, ScrapeJobEntity],
   synchronize: false, // Set to false in production.
 }
 
@@ -20,7 +26,7 @@ const dbConfigObj: any = {
   ],
   providers: [DatabaseService],
   exports: [DatabaseService],
-  controllers: [DatabaseController],
+  controllers: [DatabaseController]
 })
 
 export class DatabaseModule {}

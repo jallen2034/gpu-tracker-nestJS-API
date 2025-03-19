@@ -3,7 +3,7 @@ import { Browser, chromium, ElementHandle, Page } from 'playwright';
 import {
   TrackedGpu,
   UrlLinksPersistenceService,
-} from './url-links-persistence.service';
+} from './url-links-persistence-service';
 
 interface Result {
   sku: string;
@@ -223,7 +223,7 @@ export class GpuStockCheckerServiceBrowserAutomation {
     const browser: Browser = await chromium.launch({ headless: false });
     const page: Page = await browser.newPage();
     const trackedUrls: TrackedGpu[] =
-      this.urlLinksPersistenceService.getTrackedGpus();
+      await this.urlLinksPersistenceService.getTrackedGpus();
 
     try {
       for (const trackedUrl of trackedUrls) {

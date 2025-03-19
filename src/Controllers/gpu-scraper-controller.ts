@@ -11,17 +11,17 @@ import {
 import {
   GpuStockCheckerServiceBrowserAutomation,
   StockAvailabilityResponse,
-} from '../services/gpu-stock-checker-service-browser-automation.service';
-import { LoadAllGpusGpuScrapingService } from '../services/load-all-gpus-gpu-scraping.service';
-import { TrackedGpu, UrlLinksPersistenceService } from '../services/url-links-persistence.service';
+} from '../Services/gpu-stock-checker-service-browser-automation-service';
+import { LoadAllGpusGpuScrapingService } from '../Services/load-all-gpus-gpu-scraping-service';
+import { TrackedGpu, UrlLinksPersistenceService } from '../Services/url-links-persistence-service';
 import {
   GpuResult,
   LoadGPUsWebScrapedService,
-} from '../services/gpu-stock-checker-web-scraping.service';
+} from '../Services/gpu-stock-checker-web-scraping-service';
 import {
   LoadAllGPUsWebScrapedService,
   ScrapedStockAvailabilityResponse,
-} from '../services/gpu-stock-checker-all-web-scraping.service';
+} from '../Services/gpu-stock-checker-all-web-scraping-service';
 
 interface AddGpuRequestResponse {
   message: string;
@@ -138,9 +138,9 @@ export class GpuScraperController {
   /* Retrieves the current list of all GPU models being tracked by the system.
    * Returns an array containing the SKU identifiers and product URLs. */
   @Get('tracked')
-  getTrackedGpus(): TrackedGpu[] {
+  async getTrackedGpus(): Promise<TrackedGpu[]> {
     try {
-      return this.urlLinksPersistenceService.getTrackedGpus();
+      return await this.urlLinksPersistenceService.getTrackedGpus();
     } catch (error) {
       this.logger.error(`Failed to get tracked GPUs: ${error.message}`);
       throw new HttpException(
@@ -154,7 +154,7 @@ export class GpuScraperController {
    * Requires a product URL and descriptive SKU identifier.
    * Validates input data and prevents duplicate entries. */
   @Post()
-  addGpu(@Body() addGpuDto: AddGpuRequestBody): AddGpuRequestResponse {
+  async addGpu(@Body() addGpuDto: AddGpuRequestBody): Promise<AddGpuRequestResponse> {
     try {
       // Validate the input.
       if (!addGpuDto.url || !addGpuDto.sku) {
@@ -164,7 +164,7 @@ export class GpuScraperController {
         );
       }
 
-      this.urlLinksPersistenceService.addGpu(
+      await this.urlLinksPersistenceService.addGpu(
         addGpuDto.url,
         addGpuDto.sku,
       );

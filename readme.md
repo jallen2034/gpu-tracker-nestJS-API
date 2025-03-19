@@ -242,7 +242,7 @@ This project uses PostgreSQL in a Docker container for data persistence. Follow 
 
 ### Setting Up the PostgreSQL
 
-![Database Entity-Relationship Diagram](./src/database/ERD.png)
+![Database Entity-Relationship Diagram](src/Database/ERD.png)
 
 1. **Install Docker Desktop**
     - Download and install Docker Desktop from [docker.com](https://www.docker.com/products/docker-desktop/).

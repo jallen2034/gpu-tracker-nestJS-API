@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { GpuRepository } from '../Repositories/gpus-repository';
+import { GpusEntity } from '../Entities/gpus-entity';
 
 // Define the interface for a tracked GPU
 export interface TrackedGpu {
@@ -10,23 +12,23 @@ export interface TrackedGpu {
 export class UrlLinksPersistenceService {
   private readonly logger = new Logger(UrlLinksPersistenceService.name);
 
-  // This will be updated by another Scraper/Script dynamically later and injected into this class when needed with Dependency Injection.
-  private urlLinks: TrackedGpu[] = [];
+  constructor(private gpuRepository: GpuRepository) {}
 
-  getTrackedGpus(): TrackedGpu[] {
+  async getTrackedGpus(): Promise<TrackedGpu[]> {
     try {
-      const trackedGpus = this.urlLinks.map((link: any) => ({
-        sku: link.sku,
-        url: link.url,
+      const trackedGpus: GpusEntity[] = await this.gpuRepository.findAll();
+      return trackedGpus.map((gpu: GpusEntity) => ({
+        sku: gpu.sku,
+        url: gpu.url,
+        name: gpu.name,
       }));
-      return trackedGpus;
     } catch (error) {
       this.logger.error(`Error getting tracked GPUs: ${error.message}`);
       throw error;
     }
   }
 
-  addGpu(url: string, sku: string): void {
+  async addGpu(url: string, sku: string): Promise<void> {
     try {
       if (!url || !sku) {
         throw new Error(
@@ -34,16 +36,18 @@ export class UrlLinksPersistenceService {
         );
       }
 
-      // Check if GPU already exists to avoid duplicates.
-      const exists: boolean = this.urlLinks.some(
-        (gpu: TrackedGpu): boolean => gpu.url === url || gpu.sku === sku,
-      );
+      // Check if GPU already exists
+      const existing: GpusEntity = await this.gpuRepository.findBySku(sku);
 
-      if (exists) {
-        throw new Error('GPU with this SKU or URL already exists');
+      if (existing) {
+        throw new Error('GPU with this SKU already exists');
       }
 
-      this.urlLinks.push({ url, sku });
+      await this.gpuRepository.create({
+        sku,
+        url
+      })
+
       this.logger.log(`Added new GPU to track: ${sku}`);
     } catch (error) {
       this.logger.error(`Error adding GPU: ${error.message}`);

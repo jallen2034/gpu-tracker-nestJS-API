@@ -1,5 +1,5 @@
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./modules/app.module";
+import { AppModule } from "./Modules/app.module";
 import { INestApplication } from "@nestjs/common";
 
 /* Main entry point for the NestJS GPU Stock Checker API.
