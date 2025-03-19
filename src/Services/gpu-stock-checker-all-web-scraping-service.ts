@@ -2,12 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   GpuResult,
   LoadGPUsWebScrapedService,
-} from './gpu-stock-checker-web-scraping.service';
+} from './gpu-stock-checker-web-scraping-service';
 import {
   TrackedGpu,
   UrlLinksPersistenceService,
-} from './url-links-persistence.service';
-import { NetworkRequestService } from './network-request.service';
+} from './url-links-persistence-service';
+import { NetworkRequestService } from './network-request-service';
 
 interface ScrapedResultMap {
   [skuName: string]: GpuResult;
@@ -74,7 +74,7 @@ export class LoadAllGPUsWebScrapedService {
     try {
       const apiResponseData: GpuResult[][] = [];
       const trackedUrls: TrackedGpu[] =
-        this.urlLinksPersistenceService.getTrackedGpus();
+        await this.urlLinksPersistenceService.getTrackedGpus();
 
       this.logger.log(
         `Checking availability for ${trackedUrls.length} tracked GPUs`,

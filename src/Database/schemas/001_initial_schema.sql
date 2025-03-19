@@ -6,10 +6,9 @@ CREATE TABLE users (
     profile_image_url VARCHAR(512),
     oauth_provider VARCHAR(50),
     oauth_id VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP,
-    created DATE,
-    updated DATE
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Fixed: removed comma and added default value
 );
 
 -- Create gpus table.
@@ -17,14 +16,12 @@ CREATE TABLE gpus (
     id SERIAL PRIMARY KEY,
     sku VARCHAR(255) NOT NULL UNIQUE,
     url VARCHAR(512) NOT NULL,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255),
     manufacturer VARCHAR(100),
     model VARCHAR(100),
     msrp DECIMAL(10, 2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created DATE,
-    updated DATE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Fixed: removed comma and added default value
 );
 
 -- Create gpu_availability table.
@@ -34,11 +31,9 @@ CREATE TABLE gpu_availability (
     province VARCHAR(100) NOT NULL,
     location VARCHAR(100) NOT NULL,
     quantity INTEGER NOT NULL DEFAULT 0,
-    price DECIMAL(10, 2),
-    last_checked TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (gpu_id, province, location),
-    created DATE,
-    updated DATE
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Fixed: removed comma and added default value
 );
 
 CREATE TABLE user_gpu_relationships (
@@ -48,10 +43,9 @@ CREATE TABLE user_gpu_relationships (
     is_tracking BOOLEAN DEFAULT TRUE,
     price_threshold DECIMAL(10, 2) NULL,
     notification_enabled BOOLEAN DEFAULT FALSE,
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, gpu_id),
-    created DATE,
-    updated DATE
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Fixed: removed comma and added default value
 );
 
 -- Create scrape_jobs table.
@@ -64,11 +58,3 @@ CREATE TABLE scrape_jobs (
     error_message VARCHAR(512),
     new_column BIGINT
 );
-
--- Add some indexes for performance.
-CREATE INDEX idx_gpu_availability_gpu_id ON gpu_availability(gpu_id);
-CREATE INDEX idx_user_tracked_gpus_user_id ON user_tracked_gpus(user_id);
-CREATE INDEX idx_user_tracked_gpus_gpu_id ON user_tracked_gpus(gpu_id);
-CREATE INDEX idx_user_gpu_watchlists_user_id ON user_gpu_watchlists(user_id);
-CREATE INDEX idx_user_gpu_watchlists_gpu_id ON user_gpu_watchlists(gpu_id);
-CREATE INDEX idx_scrape_jobs_user_id ON scrape_jobs(user_id);
