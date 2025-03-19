@@ -7,7 +7,9 @@ CREATE TABLE users (
     oauth_provider VARCHAR(50),
     oauth_id VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP
+    last_login TIMESTAMP,
+    created DATE,
+    updated DATE
 );
 
 -- Create gpus table.
@@ -20,7 +22,9 @@ CREATE TABLE gpus (
     model VARCHAR(100),
     msrp DECIMAL(10, 2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created DATE,
+    updated DATE
 );
 
 -- Create gpu_availability table.
@@ -32,7 +36,9 @@ CREATE TABLE gpu_availability (
     quantity INTEGER NOT NULL DEFAULT 0,
     price DECIMAL(10, 2),
     last_checked TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (gpu_id, province, location)
+    UNIQUE (gpu_id, province, location),
+    created DATE,
+    updated DATE
 );
 
 CREATE TABLE user_gpu_relationships (
@@ -43,7 +49,9 @@ CREATE TABLE user_gpu_relationships (
     price_threshold DECIMAL(10, 2) NULL,
     notification_enabled BOOLEAN DEFAULT FALSE,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_id, gpu_id)
+    UNIQUE (user_id, gpu_id),
+    created DATE,
+    updated DATE
 );
 
 -- Create scrape_jobs table.
