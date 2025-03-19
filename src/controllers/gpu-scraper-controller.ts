@@ -55,8 +55,6 @@ export class GpuScraperController {
     private readonly gpuAllStockServiceWebScraping: LoadAllGPUsWebScrapedService,
   ) {}
 
-
-
   /* Retrieves GPU stock availability using optimized web scraping
    * rather than browser automation for faster results. */
   @Post('scraped')
@@ -175,6 +173,7 @@ export class GpuScraperController {
         message: 'GPU added successfully',
         sku: addGpuDto.sku,
       };
+
       return responseBody;
     } catch (error) {
       // Check for specific error types to return appropriate status codes.
