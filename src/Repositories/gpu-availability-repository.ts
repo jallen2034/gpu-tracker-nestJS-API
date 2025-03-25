@@ -21,7 +21,7 @@ export class GpuAvailabilityRepository {
   }
 
   async updateOrCreateAvailability(
-    gpu: GpusEntity,
+    gpu: Partial<GpusEntity>,
     province: string,
     location: string,
     quantity: number

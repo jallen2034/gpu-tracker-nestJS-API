@@ -2,7 +2,7 @@ import { GpuStockCheckerServiceBrowserAutomation } from '../Services/gpu-stock-c
 import { GpuScraperController } from '../Controllers/gpu-scraper-controller';
 import { Module } from '@nestjs/common';
 import { LoadAllGpusGpuScrapingService } from '../Services/load-all-gpus-gpu-scraping-service';
-import { UrlLinksPersistenceService } from '../Services/url-links-persistence-service';
+import { GpuPersistenceService } from '../Services/gpu-persistence.service';
 import { LoadGPUsWebScrapedService } from '../Services/gpu-stock-checker-web-scraping-service';
 import { NetworkRequestService } from '../Services/network-request-service';
 import { LoadAllGPUsWebScrapedService } from "../Services/gpu-stock-checker-all-web-scraping-service";
@@ -12,6 +12,7 @@ import { GpuAvailabilityEntity } from '../Entities/gpu-avaliability-entity';
 import { ScrapeJobEntity } from '../Entities/scrape-job-entity';
 import { DatabaseModule } from '../Database/database.module';
 import { GpuRepository } from '../Repositories/gpus-repository';
+import { GpuAvailabilityRepository } from '../Repositories/gpu-availability-repository';
 
 /* Feature module for GPU stock availability tracking functionality.
  * Encapsulates related controllers and services for the GPU tracking system. */
@@ -24,11 +25,12 @@ import { GpuRepository } from '../Repositories/gpus-repository';
   providers: [
     GpuStockCheckerServiceBrowserAutomation,
     LoadAllGpusGpuScrapingService,
-    UrlLinksPersistenceService,
+    GpuPersistenceService,
     LoadGPUsWebScrapedService,
     NetworkRequestService,
     LoadAllGPUsWebScrapedService,
-    GpuRepository
+    GpuRepository,
+    GpuAvailabilityRepository
   ],
 })
 

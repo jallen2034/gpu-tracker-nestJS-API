@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Browser, chromium, ElementHandle, Page } from 'playwright';
 import {
   TrackedGpu,
-  UrlLinksPersistenceService,
-} from './url-links-persistence-service';
+  GpuPersistenceService,
+} from './gpu-persistence.service';
 
 interface Result {
   sku: string;
@@ -33,7 +33,7 @@ export class GpuStockCheckerServiceBrowserAutomation {
   );
 
   constructor(
-    private readonly urlLinksPersistenceService: UrlLinksPersistenceService,
+    private readonly gpuPersistenceService: GpuPersistenceService,
   ) {}
 
   private isSoldOut(innerHtml: string): boolean {
@@ -223,7 +223,7 @@ export class GpuStockCheckerServiceBrowserAutomation {
     const browser: Browser = await chromium.launch({ headless: false });
     const page: Page = await browser.newPage();
     const trackedUrls: TrackedGpu[] =
-      await this.urlLinksPersistenceService.getTrackedGpus();
+      await this.gpuPersistenceService.getTrackedGpus();
 
     try {
       for (const trackedUrl of trackedUrls) {
