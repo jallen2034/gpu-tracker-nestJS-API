@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
 import { CheerioAPI } from 'cheerio';
 import { NetworkRequestService } from './network-request-service';
+import { GpuPersistenceService } from './gpu-persistence.service';
 
 export interface GpuResult {
   location: string;
@@ -14,7 +15,10 @@ export interface GpuResult {
 export class LoadGPUsWebScrapedService {
   private readonly logger: Logger = new Logger(LoadGPUsWebScrapedService.name);
 
-  constructor(private readonly networkRequestService: NetworkRequestService) {}
+  constructor(
+    private readonly networkRequestService: NetworkRequestService,
+    private readonly gpuPersistenceService: GpuPersistenceService,
+  ) {}
 
   private parseGpuListingsCheerio(html: string, sku: string): GpuResult[] {
     const storeInventory: GpuResult[] = [];
@@ -65,7 +69,16 @@ export class LoadGPUsWebScrapedService {
   async getGPUStockInfo(url: string, sku: string): Promise<GpuResult[]> {
     try {
       const html: string = await this.networkRequestService.fetchPage(url);
-      return this.parseGpuListingsCheerio(html, sku);
+      const results: GpuResult[] = this.parseGpuListingsCheerio(html, sku);
+
+      // Persist the availability data if we got results.
+      if (results.length > 0) {
+        await this.gpuPersistenceService.addGpuAvailability(results);
+      }
+
+      /* Todo: Read the available GPU's from the DB after they have been written to give the user
+       * a more accurate view of the current state of that in the DB. */
+      return results;
     } catch (error) {
       this.logger.error(
         `Error getting GPU stock info for SKU ${sku}: ${error.message}`,

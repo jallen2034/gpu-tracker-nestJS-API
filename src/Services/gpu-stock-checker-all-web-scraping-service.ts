@@ -5,8 +5,8 @@ import {
 } from './gpu-stock-checker-web-scraping-service';
 import {
   TrackedGpu,
-  UrlLinksPersistenceService,
-} from './url-links-persistence-service';
+  GpuPersistenceService,
+} from './gpu-persistence.service';
 import { NetworkRequestService } from './network-request-service';
 
 interface ScrapedResultMap {
@@ -29,7 +29,7 @@ export class LoadAllGPUsWebScrapedService {
 
   constructor(
     private readonly gpuStockServiceWebScraping: LoadGPUsWebScrapedService,
-    private readonly urlLinksPersistenceService: UrlLinksPersistenceService,
+    private readonly urlLinksPersistenceService: GpuPersistenceService,
     private readonly networkRequestService: NetworkRequestService,
   ) {}
 

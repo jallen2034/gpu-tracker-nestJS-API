@@ -7,18 +7,18 @@ import { GpuAvailabilityEntity } from '../Entities/gpu-avaliability-entity';
 import { UsersEntity } from '../Entities/users-entity';
 import { UserGpuRelationshipEntity } from '../Entities/user-gpu-relationship-entity';
 import { ScrapeJobEntity } from '../Entities/scrape-job-entity';
-import { GpuRepository } from '../Repositories/gpus-repository';
 
-const dbConfigObj: any = {
-  type: 'postgres',
+// Use proper TypeORM types instead of 'any'
+const dbConfigObj = {
+  type: 'postgres' as const, // Type assertion to help TypeScript understand this is a literal
   host: 'localhost',
   port: 5433,
   username: 'postgres',
   password: 'postgres',
   database: 'gpu_tracker',
   entities: [GpusEntity, GpuAvailabilityEntity, UsersEntity, UserGpuRelationshipEntity, ScrapeJobEntity],
-  synchronize: false, // Set to false in production.
-}
+  synchronize: false, // Set to false in production
+};
 
 @Module({
   imports: [

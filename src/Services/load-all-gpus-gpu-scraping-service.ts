@@ -1,12 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
 import { CheerioAPI } from 'cheerio';
-import { UrlLinksPersistenceService } from './url-links-persistence-service';
+import { GpuPersistenceService } from './gpu-persistence.service';
 import { NetworkRequestService } from './network-request-service';
 
 interface GPUProduct {
   name: string;
   url: string;
+  price: string;
 }
 
 @Injectable()
@@ -16,7 +17,7 @@ export class LoadAllGpusGpuScrapingService {
   );
 
   constructor(
-    private readonly urlLinksPersistenceService: UrlLinksPersistenceService,
+    private readonly gpuPersistenceService: GpuPersistenceService,
     private readonly networkRequestService: NetworkRequestService,
   ) {}
 
@@ -30,17 +31,19 @@ export class LoadAllGpusGpuScrapingService {
 
     // Find all elements with class 'js-product' which represent individual GPU cards.
     $('.js-product').each((i, element) => {
-      // Extract product name from the title element.
       const name: string = $(element).find('.product-title a').text().trim();
-
-      // Extract product URL from the title's anchor href attribute.
       const url: string =
         $(element).find('.product-title a').attr('href') || '';
+
+      const salePrice: string = $(element).find('.price.sale-price').text().trim();
+      const regularPrice: string = $(element).find(`.price.no-sale-price`).text().trim();
+      const finalPrice: string = salePrice || regularPrice;
 
       // Add this GPU's data to our collection.
       products.push({
         name,
         url,
+        price: finalPrice
       });
     });
 
@@ -77,8 +80,8 @@ export class LoadAllGpusGpuScrapingService {
 
       // Register each product with the GPU stock tracker service for monitoring.
       for (let product of allProducts) {
-        const { name, url } = product;
-        this.urlLinksPersistenceService.addGpu(url, name);
+        const { name, url, price }: GPUProduct = product;
+        this.gpuPersistenceService.addGpu(url, name, price);
       }
     } catch (error) {
       this.logger.error(

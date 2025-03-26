@@ -13,9 +13,6 @@ export class GpusEntity {
   @Column()
   url: string;
 
-  @Column()
-  name: string;
-
   @Column({ nullable: true })
   manufacturer: string;
 
@@ -34,6 +31,4 @@ export class GpusEntity {
   // Define relations.
   @OneToMany((): typeof  GpuAvailabilityEntity => GpuAvailabilityEntity, availability => availability.gpuId)
   availabilities: GpuAvailabilityEntity[];
-
-
 }

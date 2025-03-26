@@ -13,7 +13,7 @@ import {
   StockAvailabilityResponse,
 } from '../Services/gpu-stock-checker-service-browser-automation-service';
 import { LoadAllGpusGpuScrapingService } from '../Services/load-all-gpus-gpu-scraping-service';
-import { TrackedGpu, UrlLinksPersistenceService } from '../Services/url-links-persistence-service';
+import { TrackedGpu, GpuPersistenceService } from '../Services/gpu-persistence.service';
 import {
   GpuResult,
   LoadGPUsWebScrapedService,
@@ -33,6 +33,7 @@ interface AddGpuRequestResponse {
 interface AddGpuRequestBody {
   url: string;
   sku: string;
+  price: string;
 }
 
 export interface LoadGPUListResponse {
@@ -50,7 +51,7 @@ export class GpuScraperController {
   constructor(
     private readonly gpuStockServiceBrowserAutomation: GpuStockCheckerServiceBrowserAutomation,
     private readonly directApiGpuService: LoadAllGpusGpuScrapingService,
-    private readonly urlLinksPersistenceService: UrlLinksPersistenceService,
+    private readonly gpuPersistenceService: GpuPersistenceService,
     private readonly gpuStockServiceWebScraping: LoadGPUsWebScrapedService,
     private readonly gpuAllStockServiceWebScraping: LoadAllGPUsWebScrapedService,
   ) {}
@@ -97,7 +98,7 @@ export class GpuScraperController {
   }
 
   /* Retrieves real-time GPU stock availability across all retail locations.
-   * Executes a web scraping operation against Canada Computers for all tracked GPUs.
+   * Executes a browser automationn web scraping operation against Canada Computers for all tracked GPUs.
    * Results are organized by province, location, and SKU. */
   @Get()
   async getAvailability(): Promise<StockAvailabilityResponse> {
@@ -140,7 +141,7 @@ export class GpuScraperController {
   @Get('tracked')
   async getTrackedGpus(): Promise<TrackedGpu[]> {
     try {
-      return await this.urlLinksPersistenceService.getTrackedGpus();
+      return await this.gpuPersistenceService.getTrackedGpus();
     } catch (error) {
       this.logger.error(`Failed to get tracked GPUs: ${error.message}`);
       throw new HttpException(
@@ -157,16 +158,17 @@ export class GpuScraperController {
   async addGpu(@Body() addGpuDto: AddGpuRequestBody): Promise<AddGpuRequestResponse> {
     try {
       // Validate the input.
-      if (!addGpuDto.url || !addGpuDto.sku) {
+      if (!addGpuDto.url || !addGpuDto.sku || !addGpuDto.price) {
         throw new HttpException(
-          'Missing required fields: targetURL and sku are required',
+          'Missing required fields: targetURL, price and sku are required',
           HttpStatus.BAD_REQUEST,
         );
       }
 
-      await this.urlLinksPersistenceService.addGpu(
+      await this.gpuPersistenceService.addGpu(
         addGpuDto.url,
         addGpuDto.sku,
+        addGpuDto.price
       );
 
       const responseBody: AddGpuRequestResponse = {
