@@ -22,6 +22,7 @@ import {
   LoadAllGPUsWebScrapedService,
   ScrapedStockAvailabilityResponse,
 } from '../Services/gpu-stock-checker-all-web-scraping-service';
+import { LoadSpecificGpuDbService, LoadSpecificGpuResponse } from '../Services/load-specific-gpu-db-service';
 
 interface AddGpuRequestResponse {
   message: string;
@@ -35,6 +36,13 @@ interface AddGpuRequestBody {
   sku: string;
   price: string;
 }
+
+interface GpuAvailabilityRequestBody {
+  sku: string;
+  province?: string;
+  location?: string;
+}
+
 
 export interface LoadGPUListResponse {
   message: string;
@@ -54,6 +62,7 @@ export class GpuScraperController {
     private readonly gpuPersistenceService: GpuPersistenceService,
     private readonly gpuStockServiceWebScraping: LoadGPUsWebScrapedService,
     private readonly gpuAllStockServiceWebScraping: LoadAllGPUsWebScrapedService,
+    private readonly loadSpecificGpuService: LoadSpecificGpuDbService
   ) {}
 
   /* Retrieves GPU stock availability using optimized web scraping
@@ -131,6 +140,30 @@ export class GpuScraperController {
       this.logger.error(`Failed to get GPU list: ${error.message}`);
       throw new HttpException(
         'Failed to retrieve the entire list of GPUs',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('loadSpecificGpuFromDb')
+  async loadSpecificGpuFromDbByLocation(
+    @Body() requestBody: GpuAvailabilityRequestBody
+  ): Promise<LoadSpecificGpuResponse> {
+    try {
+      const { sku, province, location }: GpuAvailabilityRequestBody = requestBody;
+
+      if (!sku || !province || !location) {
+        throw new HttpException(
+          'SKU, province, and location are all required',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      return this.loadSpecificGpuService.retrieveGpuFromDb(sku, province, location);
+    } catch (error) {
+      this.logger.error(`Failed to load specified GPU from the database: ${error.message}`);
+      throw new HttpException(
+        'Failed to load specified GPU from the database',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

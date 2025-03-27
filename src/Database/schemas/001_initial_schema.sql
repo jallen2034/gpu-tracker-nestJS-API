@@ -16,8 +16,6 @@ CREATE TABLE gpus (
     id SERIAL PRIMARY KEY,
     sku VARCHAR(255) NOT NULL UNIQUE,
     url VARCHAR(512) NOT NULL,
-    manufacturer VARCHAR(100),
-    model VARCHAR(100),
     msrp DECIMAL(10, 2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Fixed: removed comma and added default value

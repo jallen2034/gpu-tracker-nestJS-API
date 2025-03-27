@@ -4,6 +4,18 @@ import { GpuAvailabilityEntity } from '../Entities/gpu-avaliability-entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GpusEntity } from '../Entities/gpus-entity';
 
+export interface GpuAvailability {
+  ga_province: string;
+  ga_location: string;
+  ga_quantity: number;
+  g_sku: string;
+  g_url: string;
+  g_msrp: string;
+  gpu_id: number;
+  availability_checked: string;
+  availability_updated: string;
+}
+
 @Injectable()
 export class GpuAvailabilityRepository {
   private readonly logger: Logger = new Logger(GpuAvailabilityRepository.name);
@@ -18,6 +30,42 @@ export class GpuAvailabilityRepository {
       where: { gpuId },
       order: { created_at: 'ASC' },
     });
+  }
+
+  async findAvailabilityBySkuAndLocation(
+    sku: string,
+    province?: string,
+    location?: string,
+  ): Promise<GpuAvailability[]> {
+    const queryBuilder = this.availabilityRepository
+      .createQueryBuilder('ga')
+      .innerJoin('ga.gpu', 'g')
+      .select([
+        'g.id AS gpu_id',
+        'g.sku',
+        'g.url',
+        'g.msrp',
+        'ga.province',
+        'ga.location',
+        'ga.quantity',
+        'ga.created_at AS availability_checked',
+        'ga.updated_at AS availability_updated',
+      ])
+      .where('g.sku = :sku', { sku });
+
+    if (province) {
+      queryBuilder.andWhere('ga.province = :province', { province });
+    }
+
+    if (location) {
+      queryBuilder.andWhere('ga.location = :location', { location });
+    }
+
+    queryBuilder.orderBy('ga.province')
+      .addOrderBy('ga.location')
+      .addOrderBy('ga.quantity', 'DESC');
+
+    return queryBuilder.getRawMany();
   }
 
   async updateOrCreateAvailability(

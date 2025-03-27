@@ -13,6 +13,7 @@ import { ScrapeJobEntity } from '../Entities/scrape-job-entity';
 import { DatabaseModule } from '../Database/database.module';
 import { GpuRepository } from '../Repositories/gpus-repository';
 import { GpuAvailabilityRepository } from '../Repositories/gpu-availability-repository';
+import { LoadSpecificGpuDbService } from '../Services/load-specific-gpu-db-service';
 
 /* Feature module for GPU stock availability tracking functionality.
  * Encapsulates related controllers and services for the GPU tracking system. */
@@ -30,7 +31,8 @@ import { GpuAvailabilityRepository } from '../Repositories/gpu-availability-repo
     NetworkRequestService,
     LoadAllGPUsWebScrapedService,
     GpuRepository,
-    GpuAvailabilityRepository
+    GpuAvailabilityRepository,
+    LoadSpecificGpuDbService
   ],
 })
 

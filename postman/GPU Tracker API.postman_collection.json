@@ -46,6 +46,34 @@
 			"response": []
 		},
 		{
+			"name": "Add a specific GPU to Track in the App",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"sku\": \"Intel Arc B580 Limited Edition Graphics Card 12GB GDDR6 Battlemage GPU\",\n    \"url\": \"https://www.canadacomputers.com/en/powered-by-intel/266423/intel-arc-b580-limited-edition-graphics-card-12gb-gddr6-battlemage-gpu-31p06hb0ba.html\",\n    \"price\": \"359.00\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/gpus",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"gpus"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Get GPU Availability Web Scraping (Fast)",
 			"request": {
 				"method": "POST",
@@ -69,34 +97,6 @@
 					"path": [
 						"gpus",
 						"scraped"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Add a specific GPU to Track in the App",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "    {\n      \"url\": \"https://www.canadacomputers.com/en/powered-by-amd/251687/gigabyte-radeon-rx-7600-xt-gaming-oc-16g-gv-r76xtgaming-oc-16gd.html\",\n      \"sku\": \"GIGABYTE Radeon RX 7600 XT GAMING OC 16G Graphics Card, 3x WINDFORCE Fans 16GB 128-bit GDDR6, GV-R76XTGAMING OC-16GD Video Card\"\n    }",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:3000/gpus",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "3000",
-					"path": [
-						"gpus"
 					]
 				}
 			},
@@ -164,6 +164,26 @@
 						"database",
 						"test"
 					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get specific GPU from DB",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"sku\": \"XFX QuickSilver AMD Radeon RX 9070 OC Gaming Edition with 16GB GDDR6\",\n  \"province\": \"Quebec\",\n  \"location\": \"Marche Central\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": ""
 				}
 			},
 			"response": []

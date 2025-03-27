@@ -43,12 +43,15 @@ export class LoadGPUsWebScrapedService {
         .first()
         .text()
         .trim();
+
       const countElement = $(element).find('span.shop-online-box');
       const countText: string = countElement.text().trim();
       const count: number = parseInt(countText, 10);
+
       const provinceElement = $(element)
         .closest('.card')
         .find('.card-header button');
+
       const province: string = provinceElement.text().trim();
 
       const foundGpuListingInfo: GpuResult = {
