@@ -72,8 +72,6 @@ export class GpuPersistenceService {
           sku: gpu.sku,
           url: gpu.url,
           msrp: gpu.price,
-          manufacturer: '', // Todo: Update the scrape to add the manufacturer and model.
-          model: '',
           created_at: new Date(),
           updated_at: new Date(),
         };
@@ -143,7 +141,7 @@ export class GpuPersistenceService {
 
       this.logger.log(`Added new GPU to track: ${sku}`);
     } catch (error) {
-      this.logger.error(`Error adding GPU: ${error.message}`);
+      this.logger.error(`Error adding GPU from the service layer: ${error.message}`);
       throw error;
     }
   }

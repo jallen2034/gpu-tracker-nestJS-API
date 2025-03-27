@@ -13,12 +13,6 @@ export class GpusEntity {
   @Column()
   url: string;
 
-  @Column({ nullable: true })
-  manufacturer: string;
-
-  @Column({ nullable: true })
-  model: string;
-
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   msrp: number;
 

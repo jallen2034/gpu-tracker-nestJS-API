@@ -20,6 +20,42 @@ export class GpuAvailabilityRepository {
     });
   }
 
+  async findAvailabilityBySkuAndLocation(
+    sku: string,
+    province?: string,
+    location?: string,
+  ): Promise<any[]> {
+    const queryBuilder = this.availabilityRepository
+      .createQueryBuilder('ga')
+      .innerJoin('ga.gpu', 'g')
+      .select([
+        'g.id AS gpu_id',
+        'g.sku',
+        'g.url',
+        'g.msrp',
+        'ga.province',
+        'ga.location',
+        'ga.quantity',
+        'ga.created_at AS availability_checked',
+        'ga.updated_at AS availability_updated',
+      ])
+      .where('g.sku = :sku', { sku });
+
+    if (province) {
+      queryBuilder.andWhere('ga.province = :province', { province });
+    }
+
+    if (location) {
+      queryBuilder.andWhere('ga.location = :location', { location });
+    }
+
+    queryBuilder.orderBy('ga.province')
+      .addOrderBy('ga.location')
+      .addOrderBy('ga.quantity', 'DESC');
+
+    return queryBuilder.getRawMany();
+  }
+
   async updateOrCreateAvailability(
     gpu: Partial<GpusEntity>,
     province: string,
