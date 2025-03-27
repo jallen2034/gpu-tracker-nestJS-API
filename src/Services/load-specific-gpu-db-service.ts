@@ -1,8 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GpuPersistenceService } from './gpu-persistence.service';
 import { GpuRepository } from '../Repositories/gpus-repository';
-import { GpuAvailabilityRepository } from '../Repositories/gpu-availability-repository';
+import { GpuAvailability, GpuAvailabilityRepository } from '../Repositories/gpu-availability-repository';
 import { GpusEntity } from '../Entities/gpus-entity';
+
+export interface LoadSpecificGpuResponse {
+  success: boolean;
+  data: {
+    gpu: {
+      id: number;
+      sku: string;
+      url: string;
+      msrp: string;
+      created_at: string;
+      updated_at: string;
+    };
+    availability: GpuAvailability[];
+  };
+}
 
 @Injectable()
 export class LoadSpecificGpuDbService {
@@ -34,7 +49,7 @@ export class LoadSpecificGpuDbService {
       }
 
       // Then fetch its availability.
-      const availabilityData = await this.gpuAvailabilityRepository.findAvailabilityBySkuAndLocation(
+      const availabilityData: GpuAvailability[] = await this.gpuAvailabilityRepository.findAvailabilityBySkuAndLocation(
         sku,
         province,
         location
@@ -44,10 +59,17 @@ export class LoadSpecificGpuDbService {
       return {
         success: true,
         data: {
-          gpu,
+          gpu: {
+            id: gpu.id,
+            sku: gpu.sku,
+            url: gpu.url,
+            msrp: gpu.msrp.toString(),
+            created_at: gpu.created_at.toISOString(),
+            updated_at: gpu.updated_at.toISOString(),
+          },
           availability: availabilityData,
         }
-      };
+      } as LoadSpecificGpuResponse;
     } catch (error) {
       this.logger.error(`Error with loading a GPU from the service layer: ${error.message}`);
       throw error;

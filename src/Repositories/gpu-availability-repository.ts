@@ -4,6 +4,18 @@ import { GpuAvailabilityEntity } from '../Entities/gpu-avaliability-entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GpusEntity } from '../Entities/gpus-entity';
 
+export interface GpuAvailability {
+  ga_province: string;
+  ga_location: string;
+  ga_quantity: number;
+  g_sku: string;
+  g_url: string;
+  g_msrp: string;
+  gpu_id: number;
+  availability_checked: string;
+  availability_updated: string;
+}
+
 @Injectable()
 export class GpuAvailabilityRepository {
   private readonly logger: Logger = new Logger(GpuAvailabilityRepository.name);
@@ -24,7 +36,7 @@ export class GpuAvailabilityRepository {
     sku: string,
     province?: string,
     location?: string,
-  ): Promise<any[]> {
+  ): Promise<GpuAvailability[]> {
     const queryBuilder = this.availabilityRepository
       .createQueryBuilder('ga')
       .innerJoin('ga.gpu', 'g')

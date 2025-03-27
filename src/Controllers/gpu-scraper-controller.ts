@@ -22,7 +22,7 @@ import {
   LoadAllGPUsWebScrapedService,
   ScrapedStockAvailabilityResponse,
 } from '../Services/gpu-stock-checker-all-web-scraping-service';
-import { LoadSpecificGpuDbService } from '../Services/load-specific-gpu-db-service';
+import { LoadSpecificGpuDbService, LoadSpecificGpuResponse } from '../Services/load-specific-gpu-db-service';
 
 interface AddGpuRequestResponse {
   message: string;
@@ -148,7 +148,7 @@ export class GpuScraperController {
   @Post('loadSpecificGpuFromDb')
   async loadSpecificGpuFromDbByLocation(
     @Body() requestBody: GpuAvailabilityRequestBody
-  ): Promise<any> {
+  ): Promise<LoadSpecificGpuResponse> {
     try {
       const { sku, province, location }: GpuAvailabilityRequestBody = requestBody;
 
