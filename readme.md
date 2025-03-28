@@ -26,6 +26,9 @@ The project follows a modular NestJS architecture with clean separation of conce
 * **Error Handling**: Proper HTTP status codes and detailed error messages.
 * **Logging**: Comprehensive logging across all services for debuggability.
 
+## Planned application Architecture
+![Canada Computers Scraper.png](src/Docs/Canada%20Computers%20Scraper.png)
+
 ### Key Services
 
 1. **NetworkRequestService**: Centralizes all HTTP requests with proper headers and rate limiting.
