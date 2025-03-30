@@ -4,10 +4,12 @@ import {
   LoadGPUsWebScrapedService,
 } from './gpu-stock-checker-web-scraping-service';
 import {
-  TrackedGpu,
   GpuPersistenceService,
-} from './gpu-persistence.service';
-import { NetworkRequestService } from './network-request-service';
+  TrackedGpu,
+} from '../../Services/gpu-persistence.service';
+import { NetworkRequestService } from '../../Services/network-request-service';
+import { ScrapeJobLoggingRepository } from '../../Repositories/scrape-job-logging-repository';
+import { ScrapeJobEntity } from '../../Entities/scrape-job-entity';
 
 interface ScrapedResultMap {
   [skuName: string]: GpuResult;
@@ -31,6 +33,8 @@ export class LoadAllGPUsWebScrapedService {
     private readonly gpuStockServiceWebScraping: LoadGPUsWebScrapedService,
     private readonly urlLinksPersistenceService: GpuPersistenceService,
     private readonly networkRequestService: NetworkRequestService,
+    private readonly gpuPersistenceService: GpuPersistenceService,
+    private readonly scrapeJobLoggingRepository: ScrapeJobLoggingRepository,
   ) {}
 
   // Transforms raw GpuResult arrays into a structured response by province, location, and SKU.
@@ -71,16 +75,22 @@ export class LoadAllGPUsWebScrapedService {
 
   // Fetches stock availability for all tracked GPUs and organizes the results
   async getAllGpuAvailability(): Promise<ScrapedStockAvailabilityResponse> {
+    let scrapeJob: ScrapeJobEntity;
+    let totalGpusUpdated = 0;
+
     try {
+      // a new scrape job into the database.
+      scrapeJob = await this.scrapeJobLoggingRepository.createScrapeJob();
+
       const apiResponseData: GpuResult[][] = [];
-      const trackedUrls: TrackedGpu[] =
+      const allTrackedGpusFromDb: TrackedGpu[] =
         await this.urlLinksPersistenceService.getTrackedGpus();
 
       this.logger.log(
-        `Checking availability for ${trackedUrls.length} tracked GPUs`,
+        `Checking availability for ${allTrackedGpusFromDb.length} tracked GPUs`,
       );
 
-      for (const trackedUrl of trackedUrls) {
+      for (const trackedUrl of allTrackedGpusFromDb) {
         this.logger.log(`Processing GPU: ${trackedUrl.sku}`);
 
         const results: GpuResult[] =
@@ -91,11 +101,23 @@ export class LoadAllGPUsWebScrapedService {
 
         apiResponseData.push(results);
 
+        // Persist the GPU availability data for this scraped GPU into our database.
+        if (results.length > 0) {
+          await this.gpuPersistenceService.addGpuAvailability(results);
+          totalGpusUpdated += results.length;
+        }
+
         // Add delay between requests to prevent rate limiting.
         await this.networkRequestService.delay(500);
       }
 
       this.logger.log('Finished processing all tracked GPUs');
+
+      // Update the scrape job record as completed
+      await this.scrapeJobLoggingRepository.updateScrapeJobCompleted(
+        scrapeJob.id,
+        totalGpusUpdated
+      );
 
       // Transform the raw data into a structured response.
       return this.displayResults(apiResponseData);
@@ -103,6 +125,15 @@ export class LoadAllGPUsWebScrapedService {
       this.logger.error(
         `Unexpected error in getAllGpuAvailability(): ${error.message}`,
       );
+
+      // If we have a scrape job record, update it as failed
+      if (scrapeJob) {
+        await this.scrapeJobLoggingRepository.updateScrapeJobFailed(
+          scrapeJob.id,
+          error.message
+        );
+      }
+
       throw error;
     }
   }

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
 import { CheerioAPI } from 'cheerio';
-import { GpuPersistenceService } from './gpu-persistence.service';
-import { NetworkRequestService } from './network-request-service';
+import { GpuPersistenceService } from '../../Services/gpu-persistence.service';
+import { NetworkRequestService } from '../../Services/network-request-service';
 
 interface GPUProduct {
   name: string;

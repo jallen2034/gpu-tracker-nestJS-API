@@ -68,6 +68,7 @@ export class GpuAvailabilityRepository {
     return queryBuilder.getRawMany();
   }
 
+  // Update or save teh availability information for a GPU after a scraped job is ran to the database.
   async updateOrCreateAvailability(
     gpu: Partial<GpusEntity>,
     province: string,

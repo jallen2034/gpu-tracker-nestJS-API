@@ -11,18 +11,19 @@ import {
 import {
   GpuStockCheckerServiceBrowserAutomation,
   StockAvailabilityResponse,
-} from '../Services/gpu-stock-checker-service-browser-automation-service';
-import { LoadAllGpusGpuScrapingService } from '../Services/load-all-gpus-gpu-scraping-service';
+} from '../Scraping-Jobs/ScrapingServices/gpu-stock-checker-service-browser-automation-service';
+import { LoadAllGpusGpuScrapingService } from '../Scraping-Jobs/ScrapingServices/load-all-gpus-gpu-scraping-service';
 import { TrackedGpu, GpuPersistenceService } from '../Services/gpu-persistence.service';
 import {
   GpuResult,
   LoadGPUsWebScrapedService,
-} from '../Services/gpu-stock-checker-web-scraping-service';
+} from '../Scraping-Jobs/ScrapingServices/gpu-stock-checker-web-scraping-service';
 import {
   LoadAllGPUsWebScrapedService,
-  ScrapedStockAvailabilityResponse,
-} from '../Services/gpu-stock-checker-all-web-scraping-service';
+} from '../Scraping-Jobs/ScrapingServices/gpu-stock-checker-all-web-scraping-service';
 import { LoadSpecificGpuDbService, LoadSpecificGpuResponse } from '../Services/load-specific-gpu-db-service';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 interface AddGpuRequestResponse {
   message: string;
@@ -62,7 +63,8 @@ export class GpuScraperController {
     private readonly gpuPersistenceService: GpuPersistenceService,
     private readonly gpuStockServiceWebScraping: LoadGPUsWebScrapedService,
     private readonly gpuAllStockServiceWebScraping: LoadAllGPUsWebScrapedService,
-    private readonly loadSpecificGpuService: LoadSpecificGpuDbService
+    private readonly loadSpecificGpuService: LoadSpecificGpuDbService,
+    @InjectQueue('gpu-scraping') private readonly scrapingQueue: Queue
   ) {}
 
   /* Retrieves GPU stock availability using optimized web scraping
@@ -94,13 +96,38 @@ export class GpuScraperController {
   }
 
   @Get('scraped')
-  async getAvailabilityScraped(): Promise<ScrapedStockAvailabilityResponse> {
+  async getAvailabilityScraped(): Promise<any> {
     try {
-      return this.gpuAllStockServiceWebScraping.getAllGpuAvailability();
+      // Add a job to the queue instead of calling the service directly.
+      const job = await this.scrapingQueue.add(
+        'scrape-all-gpus',
+        {
+          timestamp: new Date().toISOString(),
+          triggered: 'api', // Add metadata to identify the source.
+        },
+        {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 60000, // 1 minute initial delay.
+          },
+          timeout: 300000, // 5 minutes timeout.
+        }
+      )
+
+      this.logger.log(`Added scraping job ${job.id} to the queue`);
+
+      // Return job information instead of waiting for scraping results
+      return {
+        message: 'GPU scraping job queued successfully',
+        jobId: job.id,
+        status: 'queued',
+        timestamp: new Date().toISOString()
+      };
     } catch (error) {
-      this.logger.error(`Failed to fetch all GPU availability: ${error.message}`);
+      this.logger.error(`Failed to queue GPU scraping job: ${error.message}`);
       throw new HttpException(
-        'Failed to fetch all GPU availability',
+        'Failed to queue GPU scraping job',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

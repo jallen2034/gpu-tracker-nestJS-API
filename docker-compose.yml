@@ -12,6 +12,16 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./src/database/schemas:/docker-entrypoint-initdb.d
+  redis:
+    image: redis:alpine # Adds a Redis service using the official alpine image (lightweight).
+    container_name: redis_cache
+    restart: unless-stopped
+    ports:
+      - "6379:6379" # Maps port 6379 (Redis default) to our host machine.
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
 
 volumes:
   postgres_data:
+  redis_data:

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
 import { CheerioAPI } from 'cheerio';
-import { NetworkRequestService } from './network-request-service';
-import { GpuPersistenceService } from './gpu-persistence.service';
+import { NetworkRequestService } from '../../Services/network-request-service';
+import { GpuPersistenceService } from '../../Services/gpu-persistence.service';
 
 export interface GpuResult {
   location: string;
@@ -79,8 +79,6 @@ export class LoadGPUsWebScrapedService {
         await this.gpuPersistenceService.addGpuAvailability(results);
       }
 
-      /* Todo: Read the available GPU's from the DB after they have been written to give the user
-       * a more accurate view of the current state of that in the DB. */
       return results;
     } catch (error) {
       this.logger.error(

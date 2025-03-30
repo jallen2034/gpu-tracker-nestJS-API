@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GpuRepository } from '../Repositories/gpus-repository';
 import { GpusEntity } from '../Entities/gpus-entity';
-import { GpuResult } from './gpu-stock-checker-web-scraping-service';
+import { GpuResult } from '../Scraping-Jobs/ScrapingServices/gpu-stock-checker-web-scraping-service';
 import { GpuAvailabilityRepository } from '../Repositories/gpu-availability-repository';
 
 // Define the interface for a tracked GPU
