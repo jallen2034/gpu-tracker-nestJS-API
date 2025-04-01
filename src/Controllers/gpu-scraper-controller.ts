@@ -18,12 +18,9 @@ import {
   GpuResult,
   LoadGPUsWebScrapedService,
 } from '../Scraping-Jobs/ScrapingServices/gpu-stock-checker-web-scraping-service';
-import {
-  LoadAllGPUsWebScrapedService,
-} from '../Scraping-Jobs/ScrapingServices/gpu-stock-checker-all-web-scraping-service';
 import { LoadSpecificGpuDbService, LoadSpecificGpuResponse } from '../Services/load-specific-gpu-db-service';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
+import { ScrapingJobsScheduler } from '../Scraping-Jobs/scheduler';
+import { JobId } from 'bull';
 
 interface AddGpuRequestResponse {
   message: string;
@@ -62,9 +59,8 @@ export class GpuScraperController {
     private readonly directApiGpuService: LoadAllGpusGpuScrapingService,
     private readonly gpuPersistenceService: GpuPersistenceService,
     private readonly gpuStockServiceWebScraping: LoadGPUsWebScrapedService,
-    private readonly gpuAllStockServiceWebScraping: LoadAllGPUsWebScrapedService,
     private readonly loadSpecificGpuService: LoadSpecificGpuDbService,
-    @InjectQueue('gpu-scraping') private readonly scrapingQueue: Queue
+    private readonly scrapingJobScheduler: ScrapingJobsScheduler
   ) {}
 
   /* Retrieves GPU stock availability using optimized web scraping
@@ -95,32 +91,21 @@ export class GpuScraperController {
     }
   }
 
+  @Get('queue-status')
+  async getQueueStatus() {
+    return this.scrapingJobScheduler.getQueueStatus();
+  }
+
   @Get('scraped')
   async getAvailabilityScraped(): Promise<any> {
     try {
       // Add a job to the queue instead of calling the service directly.
-      const job = await this.scrapingQueue.add(
-        'scrape-all-gpus',
-        {
-          timestamp: new Date().toISOString(),
-          triggered: 'api', // Add metadata to identify the source.
-        },
-        {
-          attempts: 3,
-          backoff: {
-            type: 'exponential',
-            delay: 60000, // 1 minute initial delay.
-          },
-          timeout: 300000, // 5 minutes timeout.
-        }
-      )
-
-      this.logger.log(`Added scraping job ${job.id} to the queue`);
+      const jobId: JobId = await this.scrapingJobScheduler.scheduleGpuScraping();
 
       // Return job information instead of waiting for scraping results
       return {
         message: 'GPU scraping job queued successfully',
-        jobId: job.id,
+        jobId: jobId,
         status: 'queued',
         timestamp: new Date().toISOString()
       };

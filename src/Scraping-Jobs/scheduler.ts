@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Queue } from 'bull';
+import { Job, JobCounts, Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
@@ -11,11 +11,34 @@ export class ScrapingJobsScheduler {
     @InjectQueue('gpu-scraping') private readonly scrapingQueue: Queue,
   ) {}
 
+  async getQueueStatus() {
+    const counts: JobCounts = await this.scrapingQueue.getJobCounts();
+    const waitingJobs: Job<any>[] = await this.scrapingQueue.getWaiting();
+    const activeJobs: Job<any>[] = await this.scrapingQueue.getActive();
+
+    this.logger.log(`Queue status: ${JSON.stringify(counts)}`);
+    this.logger.log(`Waiting jobs: ${waitingJobs.length}, Active jobs: ${activeJobs.length}`);
+
+    return {
+      counts,
+      waitingJobs: waitingJobs.map((job: any) => ({
+        id: job.id,
+        data: job.data,
+        timestamp: job.timestamp
+      })),
+      activeJobs: activeJobs.map((job: any) => ({
+        id: job.id,
+        data: job.data,
+        timestamp: job.timestamp
+      }))
+    };
+  }
+
   @Cron(CronExpression.EVERY_10_MINUTES)
   async scheduleGpuScraping() {
     this.logger.log('Scheduling GPU scraping job');
 
-    await this.scrapingQueue.add(
+    const job = await this.scrapingQueue.add(
       'scrape-all-gpus',
       {
         timestamp: new Date().toISOString(),
@@ -31,5 +54,9 @@ export class ScrapingJobsScheduler {
         removeOnFail: false, // Keep failed jobs for debugging.
       },
     );
+
+    this.logger.log(`Added scraping job ${job.id} to the queue`);
+
+    return job.id
   }
 }
