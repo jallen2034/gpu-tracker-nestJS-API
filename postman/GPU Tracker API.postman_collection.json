@@ -123,6 +123,26 @@
 			"response": []
 		},
 		{
+			"name": "Get queued job status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/gpus/queue-status",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"gpus",
+						"queue-status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Load All GPUs in the App",
 			"request": {
 				"method": "GET",
